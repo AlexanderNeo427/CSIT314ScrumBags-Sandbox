@@ -1,0 +1,106 @@
+.view-history-container {
+    background-color: #a7c6ec;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+    padding: 1rem;
+}
+
+.view-history-container .header-container a {
+    padding: 0px 25px;
+    text-decoration: none;
+    color: black;
+}
+
+.view-history-container .header-container h2 {
+    display: block;
+    font-size: 1.5em;
+    margin-block-start: 0.83em;
+    margin-block-end: 0.83em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    font-weight: bold;
+    unicode-bidi: isolate;
+}
+
+/* Centers content (like the card) */
+.content-center {
+display: flex;
+justify-content: center;
+width: 100%;
+}
+
+/* Card container */
+.card {
+background-color: white;
+border-radius: 12px;
+padding: 2rem;
+width: 100%;
+max-width: 1000px;
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Top bar for search */
+.top-bar {
+display: flex;
+justify-content: space-between;
+margin-bottom: 1.5rem;
+}
+
+.top-bar input {
+flex: 1;
+padding: 0.7rem 1rem;
+font-size: 1rem;
+border-radius: 8px;
+border: 1px solid #ccc;
+margin-right: 1rem;
+background-color: white;
+color: black;
+}
+
+/* Table */
+table {
+width: 100%;
+border-collapse: collapse;
+text-align: left;
+}
+
+th, td {
+padding: 1rem;
+border-bottom: 1px solid #eee;
+}
+
+th {
+background-color: #f2f2f2;
+font-weight: bold;
+}
+
+td {
+vertical-align: middle;
+}
+
+/* Footer */
+.footer {
+text-align: center;
+margin-top: 4rem;
+padding: 1rem;
+font-size: 0.9rem;
+color: #333;
+}
+
+/* Header bar */
+.header-container {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 2rem;
+gap: 1rem;
+flex-wrap: wrap;
+}
+
+.header-container h2 {
+margin: 0;
+}
+
+#logout_button {
+margin-left: auto;
+}

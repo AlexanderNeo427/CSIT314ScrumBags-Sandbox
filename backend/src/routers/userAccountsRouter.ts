@@ -1,71 +1,167 @@
-import { Router } from "express";
-import { CreateNewUserAccountController, LoginController } from "../controllers/userControllers";
-import { StatusCodes } from "http-status-codes";
-import { UserAccountResponse } from "../dto/userDTOs";
-import { InvalidCredentialsError, UserAccountNotFound, UserAccountSuspendedError } from "../exceptions/userExceptions";
+import { ViewCleanersController } from '../controllers/cleanerControllers'
+import { ReasonPhrases, StatusCodes } from 'http-status-codes'
+import { UserAccountData } from '../shared/dataClasses'
+import {
+    CreateNewUserAccountController,
+    UpdateUserAccountController,
+    ViewUserAccountsController,
+    LoginController,
+    SuspendUserAccountController,
+    SearchUserAccountController,
+} from '../controllers/userAccountControllers'
+import { Router } from 'express'
+import {
+    UserAccountSuspendedError,
+    InvalidCredentialsError,
+    UserAccountNotFound
+} from '../shared/exceptions'
 
 const userAccountsRouter = Router()
 
-userAccountsRouter.post("/create", async (req, res): Promise<void> => {
-    const { createAs, username, password } = req.body
-
+userAccountsRouter.get('/', async (req, res): Promise<void> => {
     try {
-        const controller = new CreateNewUserAccountController();
-        const createSuccess = await controller.createNewUserAccount(createAs, username, password);
+        const username = typeof req.query.username === 'string'
+            ? req.query.username
+            : null
 
-        if (createSuccess) {
-            res.status(StatusCodes.CREATED).send("Account created successfully");
+        const userAccountData =
+            await new ViewUserAccountsController().viewUserAccounts(username)
+        res.status(StatusCodes.OK).json(userAccountData)
+    } catch (err) {
+        if (err instanceof UserAccountNotFound) {
+            res.status(StatusCodes.NOT_FOUND).json({ message: err.message })
         } else {
-            console.log("Account creation failed due to conflict."); // Log the reason for failure
-            res.status(StatusCodes.CONFLICT).send("Account creation failed");
+            res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                message: ReasonPhrases.INTERNAL_SERVER_ERROR
+            })
         }
-    } catch (error) {
-        console.error("Error during account creation:", error); // Log the error for further insights
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Internal Server Error");
     }
-
 })
 
-userAccountsRouter.post("/login", async (req, res): Promise<void> => {
+userAccountsRouter.post('/create', async (req, res): Promise<void> => {
+    try {
+        const { createAs, username, password } = req.body
+        const controller = new CreateNewUserAccountController()
+        const isCreatedSuccessfully = await controller.createNewUserAccount(
+            createAs,
+            username,
+            password
+        )
+
+        if (isCreatedSuccessfully) {
+            res.status(StatusCodes.CREATED).json({
+                message: 'Account created successfully'
+            })
+        } else {
+            res.status(StatusCodes.CONFLICT).json({
+                message: 'Account creation failed'
+            })
+        }
+    } catch (error) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: ReasonPhrases.INTERNAL_SERVER_ERROR
+        })
+    }
+})
+
+userAccountsRouter.post('/login', async (req, res): Promise<void> => {
     try {
         const { username, password } = req.body
         const controller = new LoginController()
         const userAccRes = await controller.login(username, password)
-        req.session.regenerate(err => {
+        req.session.regenerate((err) => {
             if (err) {
-                res.status(StatusCodes.INTERNAL_SERVER_ERROR)
-                    .json({ message: "Express error: " + err })
+                res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                    message: 'Express error: ' + err
+                })
                 return
             }
-            (req.session as any).user = userAccRes as UserAccountResponse 
+            ; (req.session as any).user = userAccRes as UserAccountData
             res.status(StatusCodes.OK).json(userAccRes)
         })
-    }
-    catch (err) {
+    } catch (err) {
         if (err instanceof UserAccountNotFound) {
-            res.status(StatusCodes.NOT_FOUND).send()
-        }
-        else if (err instanceof InvalidCredentialsError) {
-            res.status(StatusCodes.UNAUTHORIZED).json({ message: "Invalid credentials" })
-        }
-        else if (err instanceof UserAccountSuspendedError) {
-            res.status(StatusCodes.LOCKED).json({ message: "Account is suspended" })
-        }
-        else {
-            res.status(StatusCodes.INTERNAL_SERVER_ERROR)
-                .json({ message: (err as Error).message })
+            res.status(StatusCodes.NOT_FOUND).json({ message: err.message })
+        } else if (err instanceof InvalidCredentialsError) {
+            res.status(StatusCodes.UNAUTHORIZED).json({ message: err.message })
+        } else if (err instanceof UserAccountSuspendedError) {
+            res.status(StatusCodes.LOCKED).json({ message: err.message })
+        } else {
+            res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                message: (err as Error).message
+            })
         }
     }
 })
 
-userAccountsRouter.post("/logout", async (req, res): Promise<void> => {
+userAccountsRouter.post('/logout', async (req, res): Promise<void> => {
     try {
-        await req.session.destroy(_ => { })
-        res.status(StatusCodes.OK).json({ message: "Logout successful" })
+        await req.session.destroy((_) => { })
+        res.status(StatusCodes.OK).json({ message: 'Logout successful' })
+    } catch (err) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: (err as Error).message
+        })
     }
-    catch (err) {
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR)
-            .json({ message: (err as Error).message })
+})
+
+userAccountsRouter.get('/cleaners', async (_, res): Promise<void> => {
+    try {
+        const allAvailableCleaners =
+            await new ViewCleanersController().viewCleaners()
+        res.status(StatusCodes.OK).json(allAvailableCleaners)
+    } catch (err) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: (err as Error).message
+        })
+    }
+})
+
+userAccountsRouter.post('/update', async (req, res): Promise<void> => {
+    try {
+        const { userId, updatedAs, updatedUsername, updatedPassword } = req.body
+        await new UpdateUserAccountController().updateUserAccount(
+            userId,
+            updatedAs,
+            updatedUsername,
+            updatedPassword
+        )
+        res.status(StatusCodes.OK).json({ message: 'Update Success' })
+    } catch (err) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: (err as Error).message
+        })
+    }
+})
+
+userAccountsRouter.post('/suspend', async (req, res): Promise<void> => {
+    try {
+        const { id } = req.body
+        await new SuspendUserAccountController().suspendUserAccount(id)
+        res.status(StatusCodes.OK).json({
+            message: "User account of ID '" + id + "' has been suspended"
+        })
+    } catch (err) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: (err as Error).message
+        })
+    }
+})
+
+userAccountsRouter.get('/search', async (req, res): Promise<void> => {
+    try {
+        const search = req.query.search as string | undefined
+        if (!search) {
+            res.status(StatusCodes.BAD_REQUEST).json({ message: 'Search query is required' })
+            return
+        }
+        const foundUserAccounts =
+            await new SearchUserAccountController().searchUserAccount(search)
+        res.status(StatusCodes.OK).json(foundUserAccounts)
+    } catch (err) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: (err as Error).message
+        })
     }
 })
 

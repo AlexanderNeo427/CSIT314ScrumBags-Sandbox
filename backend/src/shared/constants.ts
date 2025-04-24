@@ -1,4 +1,4 @@
-import { drizzle } from "drizzle-orm/node-postgres"
+import { drizzle } from 'drizzle-orm/node-postgres'
 
 export const GLOBALS = {
     SALT_ROUNDS: 9

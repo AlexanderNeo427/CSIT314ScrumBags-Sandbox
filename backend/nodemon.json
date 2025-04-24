@@ -1,7 +1,7 @@
 {
-  "watch": ["dist"], 
-  "ext": "js", 
-  "ignore": ["src/", "tests/", "*.map"], 
-  "delay": "250ms", 
-  "exec": "node ./dist/index.js" 
+    "watch": ["dist"],
+    "ext": "js",
+    "ignore": ["src/", "tests/", "*.map"],
+    "delay": "250ms",
+    "exec": "node ./dist/index.js"
 }

@@ -1,18 +1,18 @@
 name: scrumbags_test_backend
 
 services:
-  postgres:
-    container_name: scrumbags_test_postgres_container
-    image: postgres:16.8-alpine
-    restart: always
-    environment:
-      POSTGRES_DB: scrumbags_test_db
-      POSTGRES_USER: scrumbags_user
-      POSTGRES_PASSWORD: scrumbags_password
-    volumes:
-      - postgres_test_data:/var/lib/postgresql/data
-    ports:
-      - '5434:5432'
-  
+    postgres:
+        container_name: scrumbags_test_postgres_container
+        image: postgres:16.8-alpine
+        restart: always
+        environment:
+            POSTGRES_DB: scrumbags_test_db
+            POSTGRES_USER: scrumbags_user
+            POSTGRES_PASSWORD: scrumbags_password
+        volumes:
+            - postgres_test_data:/var/lib/postgresql/data
+        ports:
+            - '5434:5432'
+
 volumes:
-  postgres_test_data:
+    postgres_test_data:

@@ -1,0 +1,45 @@
+.logout-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5); /* dim background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+}
+
+.logout-modal {
+    background: white;
+    padding: 30px 40px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    text-align: center;
+    width: 350px;
+}
+
+.logout-modal h2 {
+    font-size: 38px;
+    margin: 0;
+}
+
+.logout-modal p {
+    font-size: 30px;
+    margin: 0 0 24px 0;
+}
+
+.modal-buttons button {
+    display: block;
+    margin: 10px auto;
+    width: 242px;
+    height: 55px;
+    border-radius: 10px;
+    background-color: #9AC2E9;
+    font-size: 30px;
+    color: #000000;
+    font-weight: 700;
+    cursor: pointer;
+}
+  
