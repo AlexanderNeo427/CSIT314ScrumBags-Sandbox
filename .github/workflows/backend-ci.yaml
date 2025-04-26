@@ -51,4 +51,6 @@ jobs:
       - name: Push schmema to Database
         env:
           DATABASE_URL: postgresql://scrumbags_user:scrumbags_password@localhost:5433/scrumbags_db
-        run: npm run db:push
+        run: |
+          set -e
+          npm run db:push
