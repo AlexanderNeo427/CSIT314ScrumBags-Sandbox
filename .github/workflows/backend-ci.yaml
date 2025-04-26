@@ -15,15 +15,17 @@ jobs:
       run:
         working-directory: ./backend
 
+    # Completely temporary/ephemeral database
+    # Purely to test if drizzle push works
     services:
       postgres:
         image: postgres:16-8-alpine
         env:
-          POSTGRES_DB: scrumbags_test_db
+          POSTGRES_DB: scrumbags_db
           POSTGRES_USER: scrumbags_username
-          POSTGRES_PASSWORD: scrumbags_userpassword
+          POSTGRES_PASSWORD: scrumbags_password
         ports:
-          - 5432:5432
+          - 5433:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -48,6 +50,5 @@ jobs:
 
       - name: Push schmema to Database
         env:
-          DATABASE_URL: postgresql://scrumbags_user:scrumbags_password@localhost:5432/scrumbags_test_db
-          NODE_ENV: test
+          DATABASE_URL: postgresql://scrumbags_user:scrumbags_password@localhost:5433/scrumbags_db
         run: npm run db:push

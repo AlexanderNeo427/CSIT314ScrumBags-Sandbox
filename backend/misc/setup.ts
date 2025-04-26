@@ -133,20 +133,20 @@ async function setupDevelopment(): Promise<void> {
     }
 
     // Initializing TEST database.....
-    process.env.NODE_ENV = 'test'
-    if (!(await runCommand('docker compose -f docker-compose.test.yaml up -d', backendDir))) {
-        console.error('🛑 Starting dockerized TEST postgreSQL instance failed. Aborting setup.')
-        process.exit(1)
-    }
-    if (!(await waitForDbReady(process.env.DATABASE_URL!))) {
-        console.error('🛑 TEST Database did not become ready. Aborting setup.')
-        process.exit(1)
-    }
-    if (!(await runCommand('npm run db:push:test', backendDir))) {
-        console.error('🛑 TEST Database push failed. Aborting setup.')
-        process.exit(1)
-    }
-    process.env.NODE_ENV = ''
+    // process.env.NODE_ENV = 'test'
+    // if (!(await runCommand('docker compose -f docker-compose.test.yaml up -d', backendDir))) {
+    //     console.error('🛑 Starting dockerized TEST postgreSQL instance failed. Aborting setup.')
+    //     process.exit(1)
+    // }
+    // if (!(await waitForDbReady(process.env.DATABASE_URL!))) {
+    //     console.error('🛑 TEST Database did not become ready. Aborting setup.')
+    //     process.exit(1)
+    // }
+    // if (!(await runCommand('npm run db:push:test', backendDir))) {
+    //     console.error('🛑 TEST Database push failed. Aborting setup.')
+    //     process.exit(1)
+    // }
+    // process.env.NODE_ENV = ''
 
     // Seeding the initial 4 user profiles in the default database
     const db = await drizzle(process.env.DATABASE_URL!)
