@@ -19,7 +19,7 @@ jobs:
     # Purely to test if drizzle push works
     services:
       postgres:
-        image: postgres:16-8-alpine
+        image: postgres:16.8-alpine
         env:
           POSTGRES_DB: scrumbags_db
           POSTGRES_USER: scrumbags_username
