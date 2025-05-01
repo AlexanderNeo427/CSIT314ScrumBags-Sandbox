@@ -26,8 +26,8 @@ const CleanerViewMyBookings: React.FC = () => {
 
   const [services, setServices] = useState<{ serviceName: string }[]>([]);
   const [serviceName, setServiceName] = useState('');
-  const [homeowner, sethomeowner] = useState('');
-  const [bookingId, setbookingId] = useState('');
+  const [homeowner] = useState('');
+  const [bookingId] = useState('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [history, setHistory] = useState<History[]>([]);
