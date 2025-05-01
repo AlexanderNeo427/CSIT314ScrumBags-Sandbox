@@ -79,7 +79,7 @@ jobs:
           echo "Waiting for frontend to start..."
           npx wait-on http://localhost:5173 -t 30000
           echo "Waiting for backend to start..."
-          npx wait-on http://localhost:3000/health -t 30000 || npx wait-on http://localhost:3000 -t 30000
+          npx wait-on http://localhost:3000/health -t 30000
 
       # ======== Run tests ========
       - name: Run Cypress E2E Tests

@@ -34,7 +34,7 @@ export class UserProfile {
         const result = await this.db
             .select({ label: userProfilesTable.label, isSuspended: userProfilesTable.isSuspended })
             .from(userProfilesTable)
-    
+
         return result.map(profile => ({
             name: profile.label,
             isSuspended: profile.isSuspended
