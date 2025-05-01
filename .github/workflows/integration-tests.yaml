@@ -1,0 +1,89 @@
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+name: Integration Tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: ["integration"]
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16.8-alpine
+        env:
+          POSTGRES_DB: scrumbags_db
+          POSTGRES_USER: scrumbags_user
+          POSTGRES_PASSWORD: scrumbags_password
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ======= Set up and start backend ======
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: "./backend/package-lock.json"
+
+      - name: Install Backend Dependencies
+        run: cd ./backend && npm ci
+
+      - name: Push Schema to Database
+        run: |
+          set -e
+          cd ./backend
+          npm run db:push
+        env:
+          DATABASE_URL: postgresql://scrumbags_user:scrumbags_password@localhost:5433/scrumbags_db
+
+      - name: Build and Start Backend
+        run: |
+          cd ./backend
+          npm run build
+          npm run start &
+        env:
+          DATABASE_URL: postgresql://scrumbags_user:scrumbags_password@localhost:5433/scrumbags_db
+          PORT: 3000
+          SESSION_SECRET: 445E6FFEB3624C52C543893E3E8EE
+
+      # ====== Set up and start frontend ======
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: "./frontend/package-lock.json"
+
+      - name: Install Frontend Dependencies
+        run: cd ./frontend && npm ci
+
+      - name: Start the Dev Server
+        run: cd ./frontend && npm run dev &
+
+      # ===== Wait for servers to be ready ======
+      - name: Wait for Servers
+        run: |
+          echo "Waiting for frontend to start..."
+          npx wait-on http://localhost:5173 -t 30000
+          echo "Waiting for backend to start..."
+          npx wait-on http://localhost:3000/health -t 30000 || npx wait-on http://localhost:3000 -t 30000
+
+      # ======== Run tests ========
+      - name: Run Cypress E2E Tests
+        run: cd ./frontend && npx cypress run
+
+      - name: Build Frontend # Just in case
+        run: cd ./frontend && npm run build
