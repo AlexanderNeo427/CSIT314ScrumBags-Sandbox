@@ -10,10 +10,8 @@ export class ViewUserAccountsController {
         this.userAccount = new UserAccount()
     }
 
-    public async viewUserAccounts(
-        username: string | null
-    ): Promise<UserAccountData[]> {
-        return await this.userAccount.viewUserAccounts(username)
+    public async viewUserAccounts(): Promise<UserAccountData[]> {
+        return await this.userAccount.viewUserAccounts()
     }
 }
 
@@ -88,6 +86,9 @@ export class SuspendUserAccountController {
     public async suspendUserAccount(userID: number) {
         await this.userAccount.suspendUserAccount(userID)
     }
+    public async unsuspendUserAccount(userID: number) {
+        await this.userAccount.unsuspendUserAccount(userID);
+      }
 }
 
 export class SearchUserAccountController {
@@ -97,7 +98,7 @@ export class SearchUserAccountController {
         this.userAccount = new UserAccount()
     }
 
-    public async searchUserAccount(search: string): Promise<UserAccountData[]> {
-        return await this.userAccount.searchUserAccounts(search)
+    public async searchUserAccount(search: string): Promise<UserAccountData> {
+        return await this.userAccount.searchUserAccount(search)
     }
 }

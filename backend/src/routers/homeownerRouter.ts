@@ -5,7 +5,8 @@ import {
     ViewAllServiceHistoryController,
     ViewServiceHistoryController,
     AddToShortlistController,
-    ViewShortListController
+    ViewShortlistController,
+    SearchShortlistController
 } from "../controllers/homeownerControllers"
 import { Router } from "express"
 import { CleanerAlreadyShortlistedError } from "../shared/exceptions"
@@ -22,10 +23,12 @@ homeownerRouter.post(
     '/shortlist',
     requireAuthMiddleware,
     async (req, res): Promise<void> => {
-        const homeownerID = (req.session.user as UserAccountData).id
-        const { cleanerID } = req.body
         try {
+            const homeownerID = (req.session.user as UserAccountData).id
+            const { cleanerID } = req.body
+
             await new AddToShortlistController().addToShortlist(homeownerID, cleanerID)
+
             res.status(StatusCodes.OK).json({
                 message: "Shortlist successful"
             })
@@ -47,14 +50,30 @@ homeownerRouter.get(
     '/shortlist',
     requireAuthMiddleware,
     async (req, res): Promise<void> => {
-        const homeownerID = (req.session.user as UserAccountData).id
         try {
-            const shortlistedCleaners =
-                await new ViewShortListController().viewShortlist(homeownerID)
-            res.status(StatusCodes.OK).json({
-                message: "Shortlist retrieved successfully",
-                data: shortlistedCleaners
-            })
+            const homeownerID = (req.session.user as UserAccountData).id
+            const searchParam = req.query.search
+
+            if (searchParam && String(searchParam).length > 0) {
+                const searchedShortlistedCleaners =
+                    await new SearchShortlistController()
+                        .searchShortlist(homeownerID, String(searchParam))
+
+                res.status(StatusCodes.OK).json({
+                    message: "Shortlist retrieved successfully",
+                    data: searchedShortlistedCleaners
+                })
+            } else {
+                const shortlistedCleaners =
+                    await new ViewShortlistController()
+                        .viewShortlist(homeownerID)
+
+                res.status(StatusCodes.OK).json({
+                    message: "Shortlist retrieved successfully",
+                    data: shortlistedCleaners
+                })
+            }
+
         } catch (error: any) {
             res.status(StatusCodes.BAD_REQUEST).json({
                 error: error.message || "Failed to retrieve shortlist"
@@ -63,15 +82,24 @@ homeownerRouter.get(
     }
 )
 
-homeownerRouter.get(
+homeownerRouter.post(
     '/servicehistory',
     requireAuthMiddleware,
     async (req, res): Promise<void> => {
-        const homeownerID = (req.session.user as UserAccountData).id
-        const { cleanerName, service, date } = req.body
         try {
-            const serviceHistory = await new ViewServiceHistoryController()
-                .viewServiceHistory(homeownerID, cleanerName, service, date)
+            const homeownerID = (req.session.user as UserAccountData).id
+            const { cleanerName, service, fromDate, toDate } = req.body
+
+            const serviceHistory =
+                await new ViewServiceHistoryController()
+                    .viewServiceHistory(
+                        homeownerID,
+                        cleanerName,
+                        service,
+                        fromDate,
+                        toDate
+                    )
+
             res.status(StatusCodes.OK).json({
                 message: "Service history retrieved successfully",
                 data: serviceHistory
@@ -88,8 +116,9 @@ homeownerRouter.get(
     '/allservicehistory',
     requireAuthMiddleware,
     async (req, res): Promise<void> => {
-        const homeownerID = (req.session.user as UserAccountData).id
         try {
+            const homeownerID = (req.session.user as UserAccountData).id
+
             const serviceHistory =
                 await new ViewAllServiceHistoryController()
                     .viewAllServiceHistory(homeownerID)

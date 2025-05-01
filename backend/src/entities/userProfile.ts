@@ -1,8 +1,9 @@
 import { UserProfilesSelect, userProfilesTable } from '../db/schema/userProfiles'
-import { drizzle } from 'drizzle-orm/node-postgres'
+import { UserProfileNotFoundError } from '../shared/exceptions'
 import { DrizzleClient } from '../shared/constants'
-import { eq, ilike } from 'drizzle-orm'
-
+import { drizzle } from 'drizzle-orm/node-postgres'
+import { eq } from 'drizzle-orm'
+import { ilike } from 'drizzle-orm';
 export class UserProfile {
     private db: DrizzleClient
 
@@ -27,23 +28,17 @@ export class UserProfile {
     }
 
     /**
-     * View user profile & Search through user profile
+     * View user profile 
      */
-    public async viewUserProfiles(
-        profileName: string | null
-    ): Promise<string[]> {
-        type ProfileType = { label: string }
-
-        const profiles: ProfileType[] = profileName
-            ? await this.db
-                .select({ label: userProfilesTable.label })
-                .from(userProfilesTable)
-                .where(eq(userProfilesTable.label, profileName))
-            : await this.db
-                .select({ label: userProfilesTable.label })
-                .from(userProfilesTable)
-
-        return profiles.map(p => p.label)
+    public async viewUserProfiles(): Promise<{ name: string, isSuspended: boolean }[]> {
+        const result = await this.db
+            .select({ label: userProfilesTable.label, isSuspended: userProfilesTable.isSuspended })
+            .from(userProfilesTable)
+    
+        return result.map(profile => ({
+            name: profile.label,
+            isSuspended: profile.isSuspended
+        }))
     }
 
     /**
@@ -68,14 +63,28 @@ export class UserProfile {
             .set({ isSuspended: true })
             .where(eq(userProfilesTable.label, profileName))
     }
-
+    /**
+     * Unsuspend user profile 
+     */
+    public async unsuspendUserProfile(profileName: string): Promise<void> {
+        await this.db
+            .update(userProfilesTable)
+            .set({ isSuspended: false })
+            .where(eq(userProfilesTable.label, profileName))
+    }
     /**
      * Search user profiles
      */
-    public async searchUserProfiles(search: string): Promise<UserProfilesSelect[]> {
-        return await this.db
+    public async searchUserProfile(search: string): Promise<UserProfilesSelect> {
+        const [profile] = await this.db
             .select()
             .from(userProfilesTable)
-            .where(ilike(userProfilesTable.label, `%${search}%`))
+            .where(ilike(userProfilesTable.label, `%${search}%`)) // partial + case-insensitive
+            .limit(1)
+
+        if (!profile) {
+            throw new UserProfileNotFoundError("User profile doesn't exist")
+        }
+        return profile
     }
 }

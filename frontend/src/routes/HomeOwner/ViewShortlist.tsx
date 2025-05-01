@@ -6,16 +6,23 @@ import logo from '../../assets/logo.png';
 
 const ViewShortlist: React.FC = () => {
   const sessionUser = localStorage.getItem('sessionUser') || 'defaultUser';
+
+  const [search, setSearch] = useState<string>('')
   const [users, setUsers] = useState<string[]>([]);
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   // Logout Modal State
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        // Replace with the correct URL for fetching shortlist data
-        const response = await axios.get('http://localhost:3000/api/homeowner/', {
+        // Added by Alex (delete this comment in future)
+        // Copypasta these lines below to conditionally include the 'search' query params
+        const queryParams = new URLSearchParams()
+        queryParams.append('search', search.trim())
+        const response = await axios.get(`http://localhost:3000/api/homeowner/shortlist/`, {
+          params: queryParams,
           withCredentials: true,
         });
 

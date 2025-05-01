@@ -1,17 +1,17 @@
-.view-history-container {
+.view-mybookings-container {
     background-color: #a7c6ec;
     min-height: 100vh;
     font-family: Arial, sans-serif;
     padding: 1rem;
 }
 
-.view-history-container .header-container a {
+.view-mybooking-container .header-container a {
     padding: 0px 25px;
     text-decoration: none;
     color: black;
 }
 
-.view-history-container .header-container h2 {
+.view-mybooking-container .header-container h2 {
     display: block;
     font-size: 1.5em;
     margin-block-start: 0.83em;
@@ -135,3 +135,20 @@ margin: 0;
 #logout_button {
 margin-left: auto;
 }
+
+
+.status-tabs {
+    display: flex;
+    gap: 2rem;
+    margin: 1rem 0;
+  }
+  
+  .tab {
+    font-weight: bold;
+    cursor: pointer;
+    color: black;
+  }
+  
+  .tab.active {
+    text-decoration: underline;
+  }

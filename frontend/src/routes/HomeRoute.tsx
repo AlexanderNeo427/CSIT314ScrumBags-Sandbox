@@ -34,6 +34,9 @@ const HomeRoute: React.FC = () => {
   const goToUserAdminUserAccountManagement = () => {
     navigate('/user-account-management')
   }
+  const goToCleanerViewBookings = () => {
+    navigate('/cleaner-view-bookings')
+  }
   return (
     <div
       style={{
@@ -55,6 +58,7 @@ const HomeRoute: React.FC = () => {
       <button onClick={goToCleanerViewSevices}>Go to Cleaner View Services</button>
       <button onClick={goToViewReportPage}>Go to View Report Page</button>
       <button onClick={goToUserAdminUserAccountManagement}>Go to User Account Management</button>
+      <button onClick={goToCleanerViewBookings}>Go to Cleaners My Booking</button>
     </div>
   )
 }

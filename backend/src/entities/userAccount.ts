@@ -10,8 +10,9 @@ import { and, eq, ilike } from 'drizzle-orm'
 import {
     CleanerAlreadyShortlistedError,
     UserAccountSuspendedError,
+    UserAccountNotFoundError,
     InvalidCredentialsError,
-    UserAccountNotFound
+    UserProfileSuspendedError
 } from '../shared/exceptions'
 import bcrypt from 'bcrypt'
 
@@ -62,7 +63,8 @@ export default class UserAccount {
                 username: userAccountsTable.username,
                 password: userAccountsTable.password,
                 isSuspended: userAccountsTable.isSuspended,
-                userProfileLabel: userProfilesTable.label
+                userProfileLabel: userProfilesTable.label,
+                profileIsSuspended: userProfilesTable.isSuspended
             })
             .from(userAccountsTable)
             .leftJoin(
@@ -73,7 +75,7 @@ export default class UserAccount {
             .limit(1)
 
         if (!retrievedUser) {
-            throw new UserAccountNotFound(
+            throw new UserAccountNotFoundError(
                 "Couldn't find user of username: " + username
             )
         }
@@ -94,6 +96,12 @@ export default class UserAccount {
             )
         }
 
+        if (retrievedUser.profileIsSuspended) {
+            throw new UserProfileSuspendedError(
+                'User profile ' + retrievedUser.userProfileLabel + ' is suspended'
+            )
+        }
+
         return {
             id: retrievedUser.id,
             username: retrievedUser.username,
@@ -102,12 +110,10 @@ export default class UserAccount {
     }
 
     /**
-     * View user account & Search through user account
+     * View all user accounts
      */
-    public async viewUserAccounts(
-        username: string | null
-    ): Promise<UserAccountData[]> {
-        const query = this.db
+    public async viewUserAccounts(): Promise<UserAccountData[]> {
+        const query = await this.db
             .select({
                 id: userAccountsTable.id,
                 username: userAccountsTable.username,
@@ -118,15 +124,9 @@ export default class UserAccount {
             .leftJoin(
                 userProfilesTable,
                 eq(userAccountsTable.userProfileId, userProfilesTable.id)
-            );
+            )
 
-        const filteredQuery = username
-            ? query.where(eq(userAccountsTable.username, username))
-            : query
-
-        const allUsers = await filteredQuery
-
-        return allUsers.map(u => {
+        return query.map(u => {
             return {
                 id: u.id,
                 username: u.username,
@@ -139,7 +139,17 @@ export default class UserAccount {
     // This async Function only retrieves Cleaner names under the assumption that
     // There will be another page to show the Services provided by the Cleaner.
     // 15042025 2257 Hours
-    public async viewCleaners(): Promise<CleanerServicesData[]> {
+    public async viewCleaners(
+        cleanerName: string | null
+    ): Promise<CleanerServicesData[]> {
+        const conditions = [
+            eq(userProfilesTable.label, 'cleaner')
+        ]
+
+        if (cleanerName) {
+            conditions.push(eq(userAccountsTable.username, cleanerName))
+        }
+
         const queryForCleaners = await this.db
             .select({
                 cleanerID: userAccountsTable.id,
@@ -160,9 +170,7 @@ export default class UserAccount {
                 userAccountsTable.userProfileId,
                 userProfilesTable.id
             ))
-            .where(eq(
-                userProfilesTable.label, 'cleaner'
-            ))
+            .where(and(...conditions))
 
         return queryForCleaners.map(query => {
             return {
@@ -196,7 +204,10 @@ export default class UserAccount {
             .values({ homeownerID, cleanerID })
     }
 
-    public async viewShortlist(homeownerID: number): Promise<string[]> {
+    public async viewShortlist(
+        homeownerID: number
+
+    ): Promise<string[]> {
         const shortlistedCleaners = await this.db
             .select({ cleanerID: shortlistedCleanersTable.cleanerID })
             .from(shortlistedCleanersTable)
@@ -213,6 +224,30 @@ export default class UserAccount {
         }));
 
         return cleanerNames
+    }
+
+    public async searchShortlist(
+        homeownerID: number,
+        search: string
+    ): Promise<string[]> {
+        const shortlistedCleaners = await this.db
+            .select({ cleanerName: userAccountsTable.username })
+            .from(shortlistedCleanersTable)
+            .leftJoin(servicesProvidedTable, eq(
+                shortlistedCleanersTable.cleanerID,
+                servicesProvidedTable.cleanerID
+            ))
+            .leftJoin(userAccountsTable, eq(
+                shortlistedCleanersTable.cleanerID,
+                userAccountsTable.id
+            ))
+            .where(and(
+                eq(shortlistedCleanersTable.homeownerID, homeownerID),
+                ilike(userAccountsTable.username, `%${search}%`),
+            ))
+            .groupBy(userAccountsTable.username)
+
+        return shortlistedCleaners.map(cl => cl.cleanerName || "Unknown Cleaner")
     }
 
     /**
@@ -249,11 +284,18 @@ export default class UserAccount {
             .where(eq(userAccountsTable.id, userID))
     }
 
+    public async unsuspendUserAccount(userID: number): Promise<void> {
+        await this.db
+            .update(userAccountsTable)
+            .set({ isSuspended: false })
+            .where(eq(userAccountsTable.id, userID))
+    }
+
     /**
      * Search user accounts
      */
-    public async searchUserAccounts(search: string): Promise<UserAccountData[]> {
-        const result = await this.db
+    public async searchUserAccount(search: string): Promise<UserAccountData> {
+        const [res] = await this.db
             .select({
                 id: userAccountsTable.id,
                 username: userAccountsTable.username,
@@ -266,14 +308,17 @@ export default class UserAccount {
                 userProfilesTable.id
             ))
             .where(ilike(userAccountsTable.username, `%${search}%`))
+            .limit(1)
 
-        return result.map(res => {
-            return {
-                id: res.id,
-                username: res.username,
-                userProfile: res.userProfile,
-                isSuspended: res.isSuspended
-            } as UserAccountData
-        })
+        if (!res) {
+            throw new UserAccountNotFoundError("This user account doesn't exist")
+        }
+
+        return {
+            id: res.id,
+            username: res.username,
+            userProfile: res.userProfile,
+            isSuspended: res.isSuspended
+        } as UserAccountData
     }
 }

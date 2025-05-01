@@ -1,6 +1,6 @@
 import {
     CreateNewUserProfileController,
-    SearchUserProfilesController,
+    SearchUserProfileController,
     SuspendUserProfileController,
     UpdateUserProfileController,
     ViewUserProfilesController
@@ -29,14 +29,10 @@ userProfilesRouter.post('/', async (req, res): Promise<void> => {
     }
 })
 
-userProfilesRouter.get('/', async (req, res): Promise<void> => {
+userProfilesRouter.get('/', async (_, res): Promise<void> => {
     try {
-        const profileName = typeof req.query.profileName === 'string'
-            ? req.query.profileName
-            : null
-
         const profiles =
-            await new ViewUserProfilesController().viewUserProfiles(profileName)
+            await new ViewUserProfilesController().viewUserProfiles()
         res.status(StatusCodes.OK).json(profiles)
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -72,6 +68,18 @@ userProfilesRouter.post('/suspend', async (req, res): Promise<void> => {
     }
 })
 
+userProfilesRouter.post('/unsuspend', async (req, res): Promise<void> => {
+    try {
+        const { profileName } = req.body;
+        await new SuspendUserProfileController().unsuspendProfile(profileName);
+        res.status(StatusCodes.OK).json({ message: 'UserProfile unsuspended' });
+    } catch (err) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: (err as Error).message
+        });
+    }
+});
+
 userProfilesRouter.get('/search', async (req, res): Promise<void> => {
     try {
         const search = req.query.search as string | undefined
@@ -79,7 +87,7 @@ userProfilesRouter.get('/search', async (req, res): Promise<void> => {
             res.status(StatusCodes.BAD_REQUEST).json({ message: 'Search query is required' })
             return
         }
-        const data = await new SearchUserProfilesController().searchUserProfiles(search)
+        const data = await new SearchUserProfileController().searchUserProfiles(search)
         res.status(StatusCodes.OK).json(data)
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

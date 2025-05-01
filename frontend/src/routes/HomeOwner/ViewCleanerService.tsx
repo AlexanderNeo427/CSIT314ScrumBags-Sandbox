@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { Link } from 'react-router-dom';
 import LogoutModal from '../../components/LogoutModal';
 import logo from '../../assets/logo.png';
@@ -8,37 +7,39 @@ const ViewCleanerService: React.FC = () => {
   const sessionUser = localStorage.getItem('sessionUser') || 'defaultUser';
   const [users, setUsers] = useState<any[]>([]);
   const [error, setError] = useState<string>('');
-  const [search, setSearch] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(true);
-  // Logout Modal State
+  const [loading, setLoading] = useState<boolean>(false);
+  const [cleanerName, setCleaner] = useState<string>('');
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
+  const fetchUsers = async (name: string) => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch('http://localhost:3000/api/user-accounts/cleaners', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ cleanerName: name }),
+      });
+      const json = await response.json();
+      setUsers(json);
+    } catch (error) {
+      console.error('Error loading cleaners:', error);
+      setError('Could not load users. Please try again later.');
+    }
+    setLoading(false);
+  };
+
+  // Load all cleaners on page load
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await axios.get('http://localhost:3000/api/user-accounts/cleaners', {
-          withCredentials: true,
-        });
-
-        const data = response.data;
-        console.log(data);
-        setUsers(data);
-        setLoading(false);
-      } catch (err) {
-        console.error('Failed to fetch users:', err);
-        setError('Could not load users. Please try again later.');
-        setLoading(false);
-      }
-    };
-
-    fetchUsers();
+    fetchUsers('');
   }, []);
 
-  // Filtering by cleaner's name
-  const filteredUsers = users.filter(user =>
-    typeof user.cleaner === 'string' &&
-    user.cleaner.toLowerCase().includes(search.toLowerCase())
-  );
+  const handleSearch = () => {
+    fetchUsers(cleanerName);
+  };
 
   return (
     <div className="user-account-page">
@@ -54,9 +55,11 @@ const ViewCleanerService: React.FC = () => {
           <span style={{ marginRight: '8px' }}>👤</span>{sessionUser}/Logout
         </h2>
       </div>
+
       {/* Logout Modal */}
       <LogoutModal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} />
-      {/* User Accounts Section */}
+
+      {/* Cleaners' Services */}
       <div className="account-container">
         <h2>Cleaners' Services</h2>
 
@@ -67,12 +70,12 @@ const ViewCleanerService: React.FC = () => {
             type="text"
             className="search-bar"
             placeholder="Search by cleaner name"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={cleanerName}
+            onChange={(e) => setCleaner(e.target.value)}
           />
+          <button onClick={handleSearch} className="search-button">Search</button>
         </div>
 
-        {/* Loading Spinner */}
         {loading ? (
           <div className="loading">Loading cleaners...</div>
         ) : (
@@ -86,8 +89,8 @@ const ViewCleanerService: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredUsers.slice(0, 30).length > 0 ? (
-                filteredUsers.slice(0, 30).map((user, index) => (
+              {users.length > 0 ? (
+                users.slice(0, 30).map((user, index) => (
                   <tr key={index}>
                     <td>{user.cleaner}</td>
                     <td>{user.service}</td>

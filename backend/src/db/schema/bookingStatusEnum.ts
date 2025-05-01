@@ -8,19 +8,13 @@ import { pgEnum } from 'drizzle-orm/pg-core'
  * you also add that entry into the 'bookingStatusEnum' pgEnum below
  */
 export enum BookingStatus {
-    Requested = 'requested',
-    Accepted = 'accepted',
-    Rejected = 'rejected',
     Pending = 'pending',
     Cancelled = 'cancelled',
-    Done = 'done'
+    Confirmed = 'confirmed'
 }
 
 export const bookingStatusEnum = pgEnum('booking_status', [
-    BookingStatus.Requested,
-    BookingStatus.Accepted,
-    BookingStatus.Rejected,
     BookingStatus.Pending,
     BookingStatus.Cancelled,
-    BookingStatus.Done
+    BookingStatus.Confirmed,
 ])

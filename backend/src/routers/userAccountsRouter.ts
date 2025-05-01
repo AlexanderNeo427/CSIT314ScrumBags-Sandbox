@@ -3,32 +3,29 @@ import { ReasonPhrases, StatusCodes } from 'http-status-codes'
 import { UserAccountData } from '../shared/dataClasses'
 import {
     CreateNewUserAccountController,
+    SuspendUserAccountController,
     UpdateUserAccountController,
+    SearchUserAccountController,
     ViewUserAccountsController,
     LoginController,
-    SuspendUserAccountController,
-    SearchUserAccountController,
 } from '../controllers/userAccountControllers'
 import { Router } from 'express'
 import {
     UserAccountSuspendedError,
     InvalidCredentialsError,
-    UserAccountNotFound
+    UserAccountNotFoundError,
+    UserProfileSuspendedError
 } from '../shared/exceptions'
 
 const userAccountsRouter = Router()
 
-userAccountsRouter.get('/', async (req, res): Promise<void> => {
+userAccountsRouter.get('/', async (_, res): Promise<void> => {
     try {
-        const username = typeof req.query.username === 'string'
-            ? req.query.username
-            : null
-
         const userAccountData =
-            await new ViewUserAccountsController().viewUserAccounts(username)
+            await new ViewUserAccountsController().viewUserAccounts()
         res.status(StatusCodes.OK).json(userAccountData)
     } catch (err) {
-        if (err instanceof UserAccountNotFound) {
+        if (err instanceof UserAccountNotFoundError) {
             res.status(StatusCodes.NOT_FOUND).json({ message: err.message })
         } else {
             res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -76,15 +73,18 @@ userAccountsRouter.post('/login', async (req, res): Promise<void> => {
                 })
                 return
             }
-            ; (req.session as any).user = userAccRes as UserAccountData
+            (req.session as any).user = userAccRes as UserAccountData
             res.status(StatusCodes.OK).json(userAccRes)
         })
     } catch (err) {
-        if (err instanceof UserAccountNotFound) {
+        if (err instanceof UserAccountNotFoundError) {
             res.status(StatusCodes.NOT_FOUND).json({ message: err.message })
         } else if (err instanceof InvalidCredentialsError) {
             res.status(StatusCodes.UNAUTHORIZED).json({ message: err.message })
-        } else if (err instanceof UserAccountSuspendedError) {
+        } else if (
+            err instanceof UserAccountSuspendedError ||
+            err instanceof UserProfileSuspendedError
+        ) {
             res.status(StatusCodes.LOCKED).json({ message: err.message })
         } else {
             res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -105,10 +105,12 @@ userAccountsRouter.post('/logout', async (req, res): Promise<void> => {
     }
 })
 
-userAccountsRouter.get('/cleaners', async (_, res): Promise<void> => {
+userAccountsRouter.post('/cleaners', async (req, res): Promise<void> => {
+    const { cleanerName } = req.body
+
     try {
         const allAvailableCleaners =
-            await new ViewCleanersController().viewCleaners()
+            await new ViewCleanersController().viewCleaners(cleanerName)
         res.status(StatusCodes.OK).json(allAvailableCleaners)
     } catch (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -148,11 +150,26 @@ userAccountsRouter.post('/suspend', async (req, res): Promise<void> => {
     }
 })
 
+userAccountsRouter.post('/unsuspend', async (req, res): Promise<void> => {
+    try {
+        const { id } = req.body
+        await new SuspendUserAccountController().unsuspendUserAccount(id)
+        res.status(StatusCodes.OK).json({
+            message: "User account of ID '" + id + "' has been unsuspended"
+        })
+    } catch (err) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: (err as Error).message
+        })
+    }
+})
+
 userAccountsRouter.get('/search', async (req, res): Promise<void> => {
     try {
         const search = req.query.search as string | undefined
         if (!search) {
-            res.status(StatusCodes.BAD_REQUEST).json({ message: 'Search query is required' })
+            res.status(StatusCodes.BAD_REQUEST)
+                .json({ message: 'Search query is required' })
             return
         }
         const foundUserAccounts =

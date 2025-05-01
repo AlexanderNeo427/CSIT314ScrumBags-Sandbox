@@ -79,6 +79,9 @@ export const initServiceBookings = async (
     allServicesProvided: ServicesProvidedSelect[],
 ): Promise<void> => {
 
+    const twoYearsAgo = new Date()
+    twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2)
+
     const bookingsToInsert: ServiceBookingsInsert[] = []
     allHomeowners.forEach(ho => {
         faker.helpers.arrayElements(allServicesProvided, {
@@ -87,14 +90,14 @@ export const initServiceBookings = async (
             bookingsToInsert.push({
                 homeownerID: ho.id,
                 serviceProvidedID: sp.id,
-                startTimestamp: faker.date.anytime(),
+                startTimestamp: faker.date.between({
+                    from: twoYearsAgo,
+                    to: new Date()
+                }),
                 status: faker.helpers.arrayElement([
-                    BookingStatus.Requested,
-                    BookingStatus.Accepted,
-                    BookingStatus.Rejected,
                     BookingStatus.Pending,
                     BookingStatus.Cancelled,
-                    BookingStatus.Done
+                    BookingStatus.Confirmed
                 ])
             })
         })

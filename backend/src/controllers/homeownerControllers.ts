@@ -17,7 +17,7 @@ export class AddToShortlistController {
     }
 }
 
-export class ViewShortListController {
+export class ViewShortlistController {
     private userAccount: UserAccount
 
     constructor() {
@@ -26,6 +26,21 @@ export class ViewShortListController {
 
     public async viewShortlist(homeownerID: number): Promise<string[]> {
         return await this.userAccount.viewShortlist(homeownerID)
+    }
+}
+
+export class SearchShortlistController {
+    private userAccount: UserAccount
+
+    constructor() {
+        this.userAccount = new UserAccount()
+    }
+
+    public async searchShortlist(
+        homeownerID: number,
+        search: string
+    ): Promise<string[]> {
+        return await this.userAccount.searchShortlist(homeownerID, search)
     }
 }
 
@@ -39,10 +54,13 @@ export class ViewServiceHistoryController {
     public async viewServiceHistory(
         userID: number,
         cleanerName: string | null,
-        service: string,
-        date: Date
+        service: string | null,
+        fromDate: Date | string | null,
+        toDate: Date | string | null
     ): Promise<ServiceHistory[]> {
-        return await this.Service.viewServiceHistory(userID, cleanerName, service, date)
+        return await this.Service.viewServiceHistory(
+            userID, cleanerName, service, fromDate, toDate
+        )
     }
 }
 

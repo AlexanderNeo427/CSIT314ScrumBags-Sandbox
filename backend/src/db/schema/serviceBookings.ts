@@ -10,11 +10,11 @@ export const serviceBookingsTable = pgTable(
         id: serial().primaryKey(),
         homeownerID: integer()
             .notNull()
-            .references(() => userAccountsTable.id, { onDelete: 'restrict' }),
+            .references(() => userAccountsTable.id, { onDelete: 'cascade' }),
         serviceProvidedID: integer()
             .notNull()
             .references(() => servicesProvidedTable.id, {
-                onDelete: 'restrict'
+                onDelete: 'cascade'
             }),
         startTimestamp: timestamp({
             mode: 'date',

@@ -4,8 +4,12 @@ import { StatusCodes } from 'http-status-codes'
 import {
     CreateServiceCategoryController,
     CreateServiceProvidedController,
+    DeleteServiceCategoryController,
+    SearchServiceCategoryController,
+    UpdateServiceCategoryController,
+    ViewAllServicesProvidedController,
     ViewServiceCategoriesController,
-    ViewServicesProvidedController
+    ViewServicesProvidedController,
 } from '../controllers/serviceControllers'
 import { Router } from 'express'
 import {
@@ -36,6 +40,8 @@ servicesRouter.post('/categories', async (req, res): Promise<void> => {
     }
 })
 
+
+
 /**
  * View all service 'categories' that exist
  */
@@ -51,16 +57,114 @@ servicesRouter.get('/categories', async (_, res): Promise<void> => {
         })
     }
 })
+/**
+ * update service 'categories'
+ */
+servicesRouter.put('/categories', async (req, res): Promise<void> => {
+    try {
+        const { category, newCategory } = req.body
+        await new UpdateServiceCategoryController().updateServiceCategory(category, newCategory)
+        res.status(StatusCodes.OK).send()
+    } catch (err) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: (err as Error).message
+        })
+    }
+})
+/**
+ * delete service 'categories'
+ */
+servicesRouter.delete('/categories', async (req, res): Promise<void> => {
+    try {
+        const { category } = req.body
+        await new DeleteServiceCategoryController().deleteServiceCategory(category)
+        res.status(StatusCodes.OK).send()
+    } catch (err) {
+        if (err instanceof ServiceCategoryNotFoundError) {
+            res.status(StatusCodes.NOT_FOUND).json({
+                message: (err as Error).message
+            })
+        }
+        else {
+            res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                message: (err as Error).message
+            })
+        }
+    }
+})
+/**
+ * delete service 'categories'
+ */
+servicesRouter.delete('/categories', async (req, res): Promise<void> => {
+    try {
+        const { category } = req.body
+        await new DeleteServiceCategoryController().deleteServiceCategory(category)
+        res.status(StatusCodes.OK).send()
+    } catch (err) {
+        if (err instanceof ServiceCategoryNotFoundError) {
+            res.status(StatusCodes.NOT_FOUND).json({
+                message: (err as Error).message
+            })
+        }
+        else {
+            res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                message: (err as Error).message
+            })
+        }
+    }
+})
+
+/**
+ * Search service "categories"
+ */
+servicesRouter.get('/categories/search', async (req, res): Promise<void> => {
+    try {
+        const search = req.query.search as string | undefined
+        if (!search) {
+            res.status(StatusCodes.BAD_REQUEST)
+                .json({ message: 'Search query is required' })
+            return
+        }
+        const searchedcategory =
+            await new SearchServiceCategoryController()
+                .searchServiceCategory(search)
+
+        res.status(StatusCodes.OK).json(searchedcategory)
+    } catch (err) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: (err as Error).message
+        })
+    }
+})
+
+/**
+ * Gets all the services
+ */
+servicesRouter.get('/', async (req, res): Promise<void> => {
+    try {
+
+        const allServices =
+            await new ViewAllServicesProvidedController()
+                .viewAllServicesProvided()
+        res.status(StatusCodes.OK).json(allServices)
+    } catch (err) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: (err as Error).message
+        })
+    }
+})
 
 /**
  * Gets all the service 'types' provided by a cleaner (by their userID)
  */
-servicesRouter.get('/:id', async (req, res): Promise<void> => {
+servicesRouter.post('/:id', async (req, res): Promise<void> => {
     try {
         const { id } = req.params
+        const { serviceName } = req.body
+
         const servicesProvided =
             await new ViewServicesProvidedController()
-                .viewServicesProvided(Number(id))
+                .viewServicesProvided(Number(id), serviceName)
 
         res.status(StatusCodes.OK).json(servicesProvided)
     } catch (err) {
@@ -115,7 +219,5 @@ servicesRouter.post(
         }
     }
 )
-
-// servicesRouter.get('/history', )
 
 export default servicesRouter
