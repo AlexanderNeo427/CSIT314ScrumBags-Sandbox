@@ -9,6 +9,7 @@ import express, { urlencoded } from 'express'
 import session from 'express-session'
 import cors from 'cors'
 import 'dotenv/config'
+import { StatusCodes } from 'http-status-codes'
 
 const app = express()
 app.use(express.json())
@@ -42,6 +43,16 @@ app.use('/api/user-profiles/', userProfilesRouter)
 app.use('/api/homeowner/', homeownerRouter)
 app.use('/api/services/', servicesRouter)
 app.use('/api/cleaners/', cleanersRouter)
+
+app.get('/health', async (_, res) => {
+    try {
+        res.status(StatusCodes.OK).send()
+    } catch (err) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: (err as Error).message
+        })
+    }
+})
 
 const APP_PORT = process.env.PORT || 3001
 const server = app.listen(APP_PORT, () => {

@@ -7,7 +7,7 @@ import logo from '../../assets/logo.png';
 const ViewShortlist: React.FC = () => {
   const sessionUser = localStorage.getItem('sessionUser') || 'defaultUser';
 
-  const [search, setSearch] = useState<string>('')
+  const [search] = useState<string>('')
   const [users, setUsers] = useState<string[]>([]);
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
