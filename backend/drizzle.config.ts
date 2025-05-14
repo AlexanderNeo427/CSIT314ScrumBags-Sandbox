@@ -5,8 +5,6 @@ export default defineConfig({
     out: './drizzle',
     schema: './src/db/schema/*',
     dialect: 'postgresql',
-    strict: true,
-    verbose: false,
     dbCredentials: {
         url: ((): string => {
             const envPath = process.env.NODE_ENV
