@@ -60,6 +60,7 @@ jobs:
         run: |
           set -e
           cd ./backend
+          echo "DATABASE_URL: $DATABASE_URL"
           npx drizzle-kit push
           npx jest --detectOpenHandles
         env:

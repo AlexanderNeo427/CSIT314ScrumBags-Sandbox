@@ -1,25 +1,21 @@
+import { CreateNewUserProfileController } from '../src/controllers/userAdminControllers'
 import { shortlistedServicesTable } from '../src/db/schema/shortlistedServices'
 import { serviceCategoriesTable } from '../src/db/schema/serviceCategories'
 import { servicesProvidedTable } from '../src/db/schema/servicesProvided'
 import { serviceBookingsTable } from '../src/db/schema/serviceBookings'
 import { userAccountsTable } from '../src/db/schema/userAccounts'
 import { userProfilesTable } from '../src/db/schema/userProfiles'
-import { UserAccountData } from '../src/shared/dataClasses'
 import { DrizzleClient } from '../src/shared/constants'
 import UserAccount from '../src/entities/userAccount'
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { server } from '../src/index'
-import { eq, sql } from 'drizzle-orm'
-import dotenv from 'dotenv'
+import { sql } from 'drizzle-orm'
 import { Pool } from 'pg'
-import { CreateNewUserProfileController } from '../src/controllers/userAdminControllers'
+import 'dotenv/config'
 
 describe('Login', (): void => {
     let db: DrizzleClient
     let pgPool: Pool
-
-    const envPath = process.env.NODE_ENV ? `.env.${process.env.NODE_ENV}` : '.env'
-    dotenv.config({ path: envPath, override: true })
 
     beforeAll(async (): Promise<void> => {
         pgPool = new Pool({ connectionString: process.env.DATABASE_URL })

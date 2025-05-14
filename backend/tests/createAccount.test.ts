@@ -9,15 +9,12 @@ import UserAccount from '../src/entities/userAccount'
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { server } from '../src/index'
 import { sql } from 'drizzle-orm'
-import dotenv from 'dotenv'
 import { Pool } from 'pg'
+import 'dotenv/config'
 
 describe('Create new user account', (): void => {
     let db: DrizzleClient
     let pgPool: Pool
-
-    const envPath = process.env.NODE_ENV ? `.env.${process.env.NODE_ENV}` : '.env'
-    dotenv.config({ path: envPath, override: true })
 
     beforeAll(async (): Promise<void> => {
         pgPool = new Pool({ connectionString: process.env.DATABASE_URL })
