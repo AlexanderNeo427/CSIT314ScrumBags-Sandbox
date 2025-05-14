@@ -21,12 +21,6 @@ describe('Login', (): void => {
         pgPool = new Pool({ connectionString: process.env.DATABASE_URL })
         db = drizzle(pgPool)
 
-        const tableNames = Object.keys(db._).filter(key => !key.startsWith('_'));
-        console.log('Database Schema:');
-        tableNames.forEach(tableName => {
-            console.log(`- ${tableName}`);
-        })
-
         try {
             await db
                 .insert(userProfilesTable)
