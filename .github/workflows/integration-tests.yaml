@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      cypress_test_db:
+      postgres:
         image: postgres:16.8-alpine
         env:
           POSTGRES_DB: scrumbags_db
@@ -21,20 +21,6 @@ jobs:
           POSTGRES_PASSWORD: scrumbags_password
         ports:
           - 5433:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-      backend_test_db:
-        image: postgres:16.8-alpine
-        env:
-          POSTGRES_DB: scrumbags_test_db
-          POSTGRES_USER: scrumbags_user
-          POSTGRES_PASSWORD: scrumbags_password
-        ports:
-          - 5434:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -56,18 +42,16 @@ jobs:
         run: cd ./backend && npm ci
 
       # =====================================
-      #   - name: Setup test DB | Run backend unit tests
-      #     run: |
-      #       set -e
-      #       cd ./backend
-      #       echo "DATABASE_URL: $DATABASE_URL"
-      #       npx drizzle-kit push
-      #       sleep 5
-      #       npx jest --detectOpenHandles
-      #     env:
-      #       DATABASE_URL: postgresql://scrumbags_user:scrumbags_password@localhost:5434/scrumbags_test_db
-      #       PORT: 3000
-      #       SESSION_SECRET: JQHskYglzHhieFf8C9lAHfbEgbn8ZL4Q
+      - name: Setup test DB | Run backend unit tests
+        run: |
+          set -e
+          cd ./backend
+          npx drizzle-kit push
+          npx jest --detectOpenHandles
+        env:
+          DATABASE_URL: postgresql://scrumbags_user:scrumbags_password@localhost:5433/scrumbags_db
+          PORT: 3000
+          SESSION_SECRET: JQHskYglzHhieFf8C9lAHfbEgbn8ZL4Q
 
       # ========================================
       - name: Build and Start Backend
@@ -85,7 +69,6 @@ jobs:
         run: |
           set -e
           cd ./backend
-          npm run db:push
           npm run db:seed:base
         env:
           DATABASE_URL: postgresql://scrumbags_user:scrumbags_password@localhost:5433/scrumbags_db
