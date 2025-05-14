@@ -46,7 +46,7 @@ jobs:
         run: |
           set -e
           cd ./backend
-          npx drizzle-kit push
+          npm run db:push
           npx jest --detectOpenHandles
         env:
           DATABASE_URL: postgresql://scrumbags_user:scrumbags_password@localhost:5433/scrumbags_db

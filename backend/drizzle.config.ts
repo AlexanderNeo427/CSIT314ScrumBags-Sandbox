@@ -6,7 +6,7 @@ export default defineConfig({
     schema: './src/db/schema/*',
     dialect: 'postgresql',
     strict: true,
-    verbose: true,
+    verbose: false,
     dbCredentials: {
         url: ((): string => {
             const envPath = process.env.NODE_ENV
