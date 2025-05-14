@@ -62,6 +62,7 @@ jobs:
           cd ./backend
           echo "DATABASE_URL: $DATABASE_URL"
           npx drizzle-kit push
+          sleep 8 
           npx jest --detectOpenHandles
         env:
           DATABASE_URL: postgresql://scrumbags_user:scrumbags_password@localhost:5434/scrumbags_test_db
