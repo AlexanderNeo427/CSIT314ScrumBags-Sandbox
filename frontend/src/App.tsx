@@ -1,82 +1,40 @@
 import React from "react"
 import { createBrowserRouter, RouterProvider } from "react-router-dom"
-import AdminDashboard from "./routes/UserAdmin/AdminDashboardRoute"
-import PlatformManagerDashboard from "./routes/PlatformManager/PlatformManagerDashboard"
-import HomeRoute from "./routes/HomeRoute"
-import Login from "./routes/Login"
-import CreateAccountPage from "./routes/UserAdmin/CreateUserAccount"
-import CreateProfilePage from "./routes/UserAdmin/CreateUserProfile"
-import CleanerDashboardRoute from "./routes/Cleaner/CleanerDashboard"
-import CleanerViewServicesRoute from "./routes/Cleaner/CleanerViewServices"
 import ProtectedRoute from "./routes/ProtectedRoutes" // Auth guard
-import ViewUserProfile from "./routes/UserAdmin/ViewUserProfile"
-import ViewCleanerService from "./routes/HomeOwner/ViewCleanerService"
-import ViewShortlist from "./routes/HomeOwner/ViewShortlist"
-import ViewServiceCategories from "./routes/PlatformManager/ViewServiceCategories"
-import HomeOwnerViewHistory from "./routes/HomeOwner/HomeOwnerViewHistory"
-import PlatformManagerViewReports from "./routes/PlatformManager/platformManagerViewReport"
+import LoginPage from "./routes/LoginPage"
+
+// User admin
+import AdminDashboard from "./routes/UserAdmin/AdminDashboard"
+import CreateNewUserAccountPage from "./routes/UserAdmin/CreateNewUserAccountPage"
+import CreateNewUserProfilePage from "./routes/UserAdmin/CreateNewUserProfilePage"
+import ViewUserAccountPage from "./routes/UserAdmin/ViewUserAccountPage"
+import ViewUserProfilePage from "./routes/UserAdmin/ViewUserProfilePage"
+
+// Platform Manager
+import PlatformManagerDashboard from "./routes/PlatformManager/PlatformManagerDashboard"
+import ViewServiceCategoryPage from "./routes/PlatformManager/ViewServiceCategoryPage"
+import ReportPage from "./routes/PlatformManager/ReportPage"
+
+// Homeowner
 import HomeownerDashBoard from "./routes/HomeOwner/HomeownerDashBoard"
-import UserAdminUserAccountManagement from "./routes/UserAdmin/UserAdminUserAccountManagement"
-import CleanerViewMyBookings from "./routes/Cleaner/CleanerViewMyBookings"
+import ViewCleanersPage from "./routes/HomeOwner/ViewCleanersPage"
+import ViewHomeOwnerServiceHistoryPage from "./routes/HomeOwner/ViewHomeownerServiceHistoryPage"
+import ViewShortlistPage from "./routes/HomeOwner/ViewShortlistPage"
+
+// Cleaner
+import CleanerDashboardRoute from "./routes/Cleaner/CleanerDashboard"
+import ViewCleanerServiceHistoryPage from "./routes/Cleaner/ViewCleanerServiceHistoryPage"
+import ViewServicesPage from "./routes/Cleaner/ViewServicesPage"
+
+import HomeRoute from "./routes/HomeRoute"
+
+
 const browserRouter = createBrowserRouter([
   // Public Routes
-  { path: "/", element: <HomeRoute /> },
-  { path: "/login", element: <Login /> },
-  { path: "/create", element: <CreateAccountPage /> },
-  { path: "/create-profile", element: <CreateProfilePage /> },
-  { path: "/ViewUserProfile", element: <ViewUserProfile /> },
-  { path: "/ViewCleanerService", element: <ViewCleanerService /> },
-  { path: "/ViewShortlist", element: <ViewShortlist /> },
-  { path: "/ViewServiceCategories", element: <ViewServiceCategories /> },
-  { path: "/ViewServiceHistory", element: <HomeOwnerViewHistory /> },
-  { path: "/platformManager-view-report", element: <PlatformManagerViewReports /> },
-  { path: "/homeowner-dashboard", element: <HomeownerDashBoard /> },
-  { path: "/user-account-management", element: <UserAdminUserAccountManagement /> },
-  // Protected Routes (only accessible when logged in)
-  {
-    path: "/cleaner-view-bookings",
-    element: <ProtectedRoute>
-      <CleanerViewMyBookings />
-    </ProtectedRoute>
-  },
+  { path: "/", element: <LoginPage /> },
+  { path: "/login", element: <LoginPage /> },
 
-  {
-    path: "/user-account-management",
-    element: <ProtectedRoute>
-      <UserAdminUserAccountManagement />
-    </ProtectedRoute>
-  },
-  {
-    path: "/homeowner-dashboard",
-    element:
-      <ProtectedRoute>
-        <HomeownerDashBoard />
-      </ProtectedRoute>
-  },
-  {
-    path: "/ViewUserProfile",
-    element: (
-      <ProtectedRoute>
-        <ViewUserProfile />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/create",
-    element: (
-      <ProtectedRoute>
-        <CreateAccountPage />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/create-profile",
-    element: (
-      <ProtectedRoute>
-        <CreateProfilePage />
-      </ProtectedRoute>
-    ),
-  },
+  // User Admin
   {
     path: "/admin-dashboard",
     element: (
@@ -86,13 +44,38 @@ const browserRouter = createBrowserRouter([
     ),
   },
   {
-    path: "/cleaner-dashboard",
+    path: "/create",
     element: (
       <ProtectedRoute>
-        <CleanerDashboardRoute />
+        <CreateNewUserAccountPage />
       </ProtectedRoute>
     ),
   },
+  {
+    path: "/create-profile",
+    element: (
+      <ProtectedRoute>
+        <CreateNewUserProfilePage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/ViewUserProfile",
+    element: (
+      <ProtectedRoute>
+        <ViewUserProfilePage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/user-account-management",
+    element: 
+      <ProtectedRoute>
+        <ViewUserAccountPage />
+      </ProtectedRoute>
+  },
+
+  // Platform Manager
   {
     path: "/platformManager-dashboard",
     element: (
@@ -101,11 +84,71 @@ const browserRouter = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
+  { path: "/platformManager-view-report", 
+    element: (
+      <ProtectedRoute>
+        <ReportPage />
+      </ProtectedRoute>
+    )
+  },
+  { path: "/ViewServiceCategories", 
+    element: (
+      <ProtectedRoute>
+        <ViewServiceCategoryPage />
+      </ProtectedRoute>
+    ) 
+  },
+
+  // Homeowner
+  {
+    path: "/homeowner-dashboard",
+    element:
+      <ProtectedRoute>
+        <HomeownerDashBoard />
+      </ProtectedRoute>
+  },
+  { path: "/ViewCleanerService", 
+    element: (
+      <ProtectedRoute>
+        <ViewCleanersPage />
+      </ProtectedRoute>
+    )
+  },
+  { path: "/ViewServiceHistory", 
+    element: (
+      <ProtectedRoute>
+        <ViewHomeOwnerServiceHistoryPage />
+      </ProtectedRoute>
+    )
+  },
+  { path: "/ViewShortlist", 
+    element: (
+      <ProtectedRoute>
+        <ViewShortlistPage />
+      </ProtectedRoute>
+    )
+  },
+
+  // Cleaner
+  {
+    path: "/cleaner-dashboard",
+    element: (
+      <ProtectedRoute>
+        <CleanerDashboardRoute />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/cleaner-view-bookings",
+    element: <ProtectedRoute>
+      <ViewCleanerServiceHistoryPage />
+    </ProtectedRoute>
+  },
   {
     path: "/cleaner-view-services",
     element: (
       <ProtectedRoute>
-        <CleanerViewServicesRoute />
+        <ViewServicesPage />
       </ProtectedRoute>
     ),
   },

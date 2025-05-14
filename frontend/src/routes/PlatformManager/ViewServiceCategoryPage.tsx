@@ -4,14 +4,14 @@ import { Link } from 'react-router-dom'
 import LogoutModal from '../../components/LogoutModal'
 import logo from '../../assets/logo.png'
 
-const ViewServiceCategories: React.FC = () => {
+const ViewServiceCategoryPage: React.FC = () => {
   const sessionUser = localStorage.getItem('sessionUser') || 'defaultUser'
   const [services, setServices] = useState<string[]>([])
   const [search, setSearch] = useState<string>('')
   const [showLogoutModal, setShowLogoutModal] = useState(false)
-  const [showPopup, setShowPopup] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [showUpdateModal, setShowUpdateModal] = useState(false)  // Added for update modal
+  const [createServiceCategoryModal, setCreateServiceCategoryModal] = useState(false)
+  const [deleteServiceCategoryModal, setDeleteServiceCategoryModal] = useState(false)
+  const [updateServiceCategoryModal, setUpdateServiceCategoryModal] = useState(false)  // Added for update modal
   const [selectedService, setSelectedService] = useState<string | null>(null)
   const [newServiceCategory, setNewServiceCategory] = useState<{ serviceName: string }>({
     serviceName: ''
@@ -53,7 +53,7 @@ const ViewServiceCategories: React.FC = () => {
       })
       alert(`Service category '${selectedService}' deleted successfully.`)
       setServices(services.filter(service => service !== selectedService))
-      setShowDeleteModal(false)
+      setDeleteServiceCategoryModal(false)
     } catch (err) {
       console.error('Failed to delete service category:', err)
       alert('Failed to delete service category. See console for details.')
@@ -78,8 +78,11 @@ const ViewServiceCategories: React.FC = () => {
         const response = await axios.get(`http://localhost:3000/api/services/categories/search?search=${search}`, {
           withCredentials: true,
         })
-
-        setServices([response.data])
+        if (response.data.length > 0) {
+          setServices([response.data])
+        } else {
+          setServices([])
+        }
       } catch (err) {
         console.error('Search failed:', err)
         setServices([])
@@ -108,7 +111,7 @@ const ViewServiceCategories: React.FC = () => {
       <LogoutModal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} />
 
       {/* Create Category Modal */}
-      {showPopup && (
+      {createServiceCategoryModal && (
         <div className="modal-overlay">
           <div className="modal">
             <h2>Create New Service Category</h2>
@@ -121,30 +124,34 @@ const ViewServiceCategories: React.FC = () => {
               onChange={(e) => setNewServiceCategory({ ...newServiceCategory, serviceName: e.target.value })}
             />
             <div className="modal-buttons">
-              <button onClick={() => setShowPopup(false)}>Cancel</button>
+              <button onClick={() => setCreateServiceCategoryModal(false)}>Cancel</button>
               <button onClick={async () => {
                 try {
-                  const response = await fetch('http://localhost:3000/api/services/categories', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ category: newServiceCategory.serviceName }),
-                    credentials: 'include',
-                  })
+                  if (newServiceCategory.serviceName == '') {
+                    alert('Failed to create service category.')
+                  } else {
+                    const response = await fetch('http://localhost:3000/api/services/categories', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ category: newServiceCategory.serviceName }),
+                      credentials: 'include',
+                    })
 
-                  if (!response.ok) {
-                    const errorData = await response.json()
-                    throw new Error(errorData.message || 'Failed to create service category')
+                    if (!response.ok) {
+                      const errorData = await response.json()
+                      throw new Error(errorData.message || 'Failed to create service category')
+                    }
+
+                    setCreateServiceCategoryModal(false)
+                    setNewServiceCategory({ serviceName: '' })
+                    window.location.reload()
                   }
-
-                  setShowPopup(false)
-                  setNewServiceCategory({ serviceName: '' })
-                  window.location.reload()
                 } catch (error) {
                   console.error('Error creating service category:', error)
                   alert('Failed to create service category.')
                 }
               }}>
-                Add
+                Create
               </button>
             </div>
           </div>
@@ -152,7 +159,7 @@ const ViewServiceCategories: React.FC = () => {
       )}
 
       {/* Update Category Modal */}
-      {showUpdateModal && selectedService && (
+      {updateServiceCategoryModal && selectedService && (
         <div className="modal-overlay">
           <div className="modal">
             <h2>Update Service Category</h2>
@@ -165,21 +172,28 @@ const ViewServiceCategories: React.FC = () => {
               placeholder="Enter new category name"
             />
             <div className="modal-buttons">
-              <button onClick={() => setShowUpdateModal(false)}>Cancel</button>
+              <button onClick={() => setUpdateServiceCategoryModal(false)}>Cancel</button>
               <button onClick={async () => {
                 try {
-                  const response = await axios.put('http://localhost:3000/api/services/categories', {
-                    category: selectedService,
-                    newCategory: updateServiceCategory.serviceName
-                  }, { withCredentials: true })
+                  if (updateServiceCategory.serviceName == "") {
+                    alert("Please fill in this field")
+                  } else {
+                    const response = await axios.put('http://localhost:3000/api/services/categories', {
+                      category: selectedService,
+                      newCategory: updateServiceCategory.serviceName
+                    }, { withCredentials: true })
 
-                  if (response.status === 200) {
-                    alert(`Service category '${selectedService}' updated successfully.`)
-                    setServices(services.map(service => 
-                      service === selectedService ? updateServiceCategory.serviceName : service
-                    ))
-                    setShowUpdateModal(false)
+                    if (response.status === 200) {
+                      alert(`Service category '${selectedService}' updated successfully.`)
+                      setServices(services.map(service =>
+                        service === selectedService ? updateServiceCategory.serviceName : service
+                      ))
+                      setUpdateServiceCategoryModal(false)
+                    }
+                    setUpdateServiceCategory({ serviceName: "" })
                   }
+
+
                 } catch (error) {
                   console.error('Error updating service category:', error)
                   alert('Failed to update service category.')
@@ -193,12 +207,12 @@ const ViewServiceCategories: React.FC = () => {
       )}
 
       {/* Delete Modal */}
-      {showDeleteModal && selectedService && (
+      {deleteServiceCategoryModal && selectedService && (
         <div className="modal-overlay">
           <div className="modal">
             <h2>Are you sure you want to delete "{selectedService}"?</h2>
             <div className="modal-buttons">
-              <button onClick={() => setShowDeleteModal(false)}>Cancel</button>
+              <button onClick={() => setDeleteServiceCategoryModal(false)}>Cancel</button>
               <button onClick={handleDelete} className="delete-btn">Delete</button>
             </div>
           </div>
@@ -218,7 +232,7 @@ const ViewServiceCategories: React.FC = () => {
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={handleSearch}
             />
-            <button className="create-btn" onClick={() => setShowPopup(true)}>Create New Category</button>
+            <button className="create-btn" onClick={() => setCreateServiceCategoryModal(true)}>Create New Category</button>
           </div>
 
           <table>
@@ -240,7 +254,7 @@ const ViewServiceCategories: React.FC = () => {
                           onClick={() => {
                             setSelectedService(service)
                             setUpdateServiceCategory({ serviceName: '' })  // Empty the input field
-                            setShowUpdateModal(true)
+                            setUpdateServiceCategoryModal(true)
                           }}
                         >
                           Edit
@@ -250,7 +264,7 @@ const ViewServiceCategories: React.FC = () => {
                           className="delete-btn"
                           onClick={() => {
                             setSelectedService(service)
-                            setShowDeleteModal(true)
+                            setDeleteServiceCategoryModal(true)
                           }}
                         >
                           Delete
@@ -259,7 +273,7 @@ const ViewServiceCategories: React.FC = () => {
                     </td>
                   </tr>
                 ))
-                ) : (
+              ) : (
                 <tr>
                   <td colSpan={2}>No services available.</td>
                 </tr>
@@ -270,11 +284,11 @@ const ViewServiceCategories: React.FC = () => {
       </div>
 
       {/* Footer */}
-      <div className="footer">
+      <div className="footer-container">
         <b>© Copyright 2025 Easy & Breezy - All Rights Reserved</b>
       </div>
     </div>
   )
 }
 
-export default ViewServiceCategories
+export default ViewServiceCategoryPage

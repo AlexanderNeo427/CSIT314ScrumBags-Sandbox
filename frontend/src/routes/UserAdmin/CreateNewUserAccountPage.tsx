@@ -10,7 +10,7 @@ interface UserProfile {
   isSuspended: boolean
 }
 
-const CreateAccountPage: React.FC = () => {
+const CreateNewUserAccountPage: React.FC = () => {
   const sessionUser = localStorage.getItem('sessionUser') || 'defaultUser';
   const [role, setRole] = useState<string>('')
   const [roles, setRoles] = useState<UserProfile[]>([]); // Correct for array of strings
@@ -219,4 +219,4 @@ const CreateAccountPage: React.FC = () => {
   )
 }
 
-export default CreateAccountPage
+export default CreateNewUserAccountPage

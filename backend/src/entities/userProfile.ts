@@ -18,6 +18,10 @@ export class UserProfile {
      */
     public async createNewUserProfile(profileName: string): Promise<boolean> {
         try {
+            if (profileName.trim().length === 0) {
+                return false
+            }
+
             await this.db
                 .insert(userProfilesTable)
                 .values({ label: profileName })
@@ -48,7 +52,7 @@ export class UserProfile {
         newProfileName: string
     ): Promise<boolean> {
         try {
-            if (newProfileName.length === 0) {
+            if (newProfileName.trim().length === 0) {
                 return false
             }
 

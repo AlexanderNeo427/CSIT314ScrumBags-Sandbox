@@ -30,7 +30,7 @@ interface editServiceInput {
     price: string
 }
 
-const CleanerViewServicesRoute: React.FC = () => {
+const ViewServicesPage: React.FC = () => {
     const sessionUser: UserAccountResponse = JSON.parse(localStorage.getItem('sessionObject') || '{}')
 
     // Variables
@@ -58,8 +58,8 @@ const CleanerViewServicesRoute: React.FC = () => {
     // Popup modals
     const [showLogoutModal, setShowLogoutModal] = useState(false)
     const [createServiceModal, setCreateServiceModal] = useState(false)
-    const [deleteServiceModal, setDeleteServiceModal] = useState(false)
-    const [editServiceModal, setEditServiceModal] = useState(false)
+    const [deleteServiceProvidedModal, setDeleteServiceProvidedModal] = useState(false)
+    const [updateServiceProvidedModal, setUpdateServiceProvidedModal] = useState(false)
     const [viewServiceModal, setViewServiceModal] = useState(false)
 
     // Fetch current services
@@ -114,30 +114,32 @@ const CleanerViewServicesRoute: React.FC = () => {
     const handleCreateService = async () => {
         try {
             console.log(newService)
+            if(newService.serviceCategory == '' || newService.description == '' || newService.serviceName == '' || newService.price == ''){
+                alert('Failed to create service.')
+            } else {
+                const response = await fetch('http://localhost:3000/api/services/me', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        service: newService.serviceName,
+                        category: newService.serviceCategory,
+                        description: newService.description,
+                        price: Number(newService.price),
+                    }),
+                    credentials: 'include',
+                })
+                if (!response.ok) {
+                    const errorData = await response.json()
+                    throw new Error(errorData.message || 'Failed to create service')
+                }
             
-            const response = await fetch('http://localhost:3000/api/services/me', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    service: newService.serviceName,
-                    category: newService.serviceCategory,
-                    description: newService.description,
-                    price: Number(newService.price),
-                }),
-                credentials: 'include',
-            })
-        
-            if (!response.ok) {
-                const errorData = await response.json()
-                throw new Error(errorData.message || 'Failed to create service')
+                setCreateServiceModal(false)
+                setNewService({ serviceCategory:'', serviceName: '', description: '', price: '' })
+                await fetchServices() // re-fetch without refreshing
             }
-        
-            setCreateServiceModal(false)
-            setNewService({ serviceCategory:'', serviceName: '', description: '', price: '' })
-            await fetchServices() // re-fetch without refreshing
-            } catch (error) {
+        } catch (error) {
                 console.error('Error creating service:', error)
                 alert('Failed to create service.')
             }
@@ -159,9 +161,11 @@ const CleanerViewServicesRoute: React.FC = () => {
             if (!response.ok) {
                 const errorData = await response.json()
                 throw new Error(errorData.message || 'Failed to delete service')
+            } else {
+                alert("Service deleted successfully")
             }
 
-            setDeleteServiceModal(false)
+            setDeleteServiceProvidedModal(false)
             await fetchServices()
         } catch (error) {
             console.error('Error deleting service: ', error)
@@ -188,9 +192,11 @@ const CleanerViewServicesRoute: React.FC = () => {
             if (!response.ok) {
                 const errorData = await response.json()
                 throw new Error(errorData.message || 'Failed to edit service')
+            } else {
+                alert("Update successful")
             }
 
-            setEditServiceModal(false)
+            setUpdateServiceProvidedModal(false)
             await fetchServices()
         } catch (error) {
             console.error('Error editing service: ', error)
@@ -267,6 +273,7 @@ const CleanerViewServicesRoute: React.FC = () => {
                             id="categoryDropdown"
                             value={newService.serviceCategory}
                             onChange={(e) => setNewService({ ...newService, serviceCategory: e.target.value })}
+                            required
                         >
                             <option value=''>Select a service</option>
                             {availableCategories.map((categoryName, index) => (
@@ -282,6 +289,7 @@ const CleanerViewServicesRoute: React.FC = () => {
                             placeholder="e.g Sweep floor"
                             value={newService.serviceName}
                             onChange={(e) => setNewService({ ...newService, serviceName: e.target.value })}    
+                            required
                         />
 
                         <label>Service Description</label>
@@ -290,6 +298,7 @@ const CleanerViewServicesRoute: React.FC = () => {
                             value={newService.description}
                             onChange={(e) => setNewService({ ...newService, description: e.target.value })}
                             rows={4}
+                            required
                         />
 
                         <label>Price</label>
@@ -299,6 +308,7 @@ const CleanerViewServicesRoute: React.FC = () => {
                             min="0"
                             value={newService.price}
                             onChange={(e) => setNewService({ ...newService, price: e.target.value })}
+                            required
                         />
 
                         <div className="modal-buttons">
@@ -310,12 +320,12 @@ const CleanerViewServicesRoute: React.FC = () => {
             )}
 
             {/* Delete Modal */}
-            {deleteServiceModal && (
+            {deleteServiceProvidedModal && (
                 <div className="modal-overlay">
                     <div className="modal">
                         <h2>Are you sure you want to delete "{selectedServiceName}"?</h2>
                         <div className="modal-buttons">
-                            <button onClick={() => setDeleteServiceModal(false)}>Cancel</button>
+                            <button onClick={() => setDeleteServiceProvidedModal(false)}>Cancel</button>
                             <button onClick={handleDelete} className="delete-btn">Delete</button>
                         </div>
                     </div>
@@ -323,7 +333,7 @@ const CleanerViewServicesRoute: React.FC = () => {
             )}
 
             {/* Edit Service Modal */}
-            {editServiceModal && (
+            {updateServiceProvidedModal && (
                 <div className="modal-overlay">
                     <div className="modal">
                         <h2>Edit "{selectedServiceName}"?</h2>
@@ -354,7 +364,7 @@ const CleanerViewServicesRoute: React.FC = () => {
                         />
 
                         <div className="modal-buttons">
-                            <button onClick={() => setEditServiceModal(false)}>Cancel</button>
+                            <button onClick={() => setUpdateServiceProvidedModal(false)}>Cancel</button>
                             <button onClick={handleEdit} className="edit-btn">Edit</button>
                         </div>
                     </div>
@@ -408,56 +418,65 @@ const CleanerViewServicesRoute: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {services.map((service, index) => (
-                            <tr key={service.id || index}>
-                                <td>{service.type}</td>
-                                <td>${service.price}</td>
-                                <td>
-                                    <div className="action-buttons">
-                                        <button
-                                        className="view-btn"
-                                        onClick={async () => {
-                                            setSelectedServiceName(service.type)
-                                            setSelectedService(service.id)
-                                            setViewService({
-                                                id: service.id,
-                                                type: service.type,
-                                                description: service.description,
-                                                price: service.price
-                                            })
-                                            await handleView(service.id)
-                                            setViewServiceModal(true)
-                                        }}>
-                                            View
-                                        </button>
-                                        <button
-                                        className="edit-btn"
-                                        onClick={() => {
-                                            setSelectedServiceName(service.type)
-                                            setSelectedService(service.id)
-                                            setEditService({
-                                                serviceName: service.type,
-                                                description: service.description,
-                                                price: service.price.toString(), // Convert number to string to match `editServiceInput`
-                                            })
-                                            setEditServiceModal(true)
-                                        }}>
-                                            Edit
-                                        </button>
-                                        <button
-                                        className="delete-btn"
-                                        onClick={() => {
-                                            setSelectedServiceName(service.type)
-                                            setSelectedService(service.id)
-                                            setDeleteServiceModal(true)
-                                        }}>
-                                            Delete
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            ))}
+                            {services.length === 0 ? (
+                                <tr>
+                                    <td colSpan={3} style={{ textAlign: 'center', padding: '1rem' }}>
+                                        No service found.
+                                    </td>
+                                </tr>
+                            ) : (
+                                services.map((service, index) => (
+                                    <tr key={service.id || index}>
+                                        <td>{service.type}</td>
+                                        <td>${service.price}</td>
+                                        <td>
+                                            <div className="action-buttons">
+                                                <button
+                                                    className="view-btn"
+                                                    onClick={async () => {
+                                                        setSelectedServiceName(service.type)
+                                                        setSelectedService(service.id)
+                                                        setViewService({
+                                                            id: service.id,
+                                                            type: service.type,
+                                                            description: service.description,
+                                                            price: service.price
+                                                        })
+                                                        await handleView(service.id)
+                                                        setViewServiceModal(true)
+                                                    }}>
+                                                    View
+                                                </button>
+                                                <button
+                                                    className="edit-btn"
+                                                    onClick={() => {
+                                                        setSelectedServiceName(service.type)
+                                                        setSelectedService(service.id)
+                                                        setEditService({
+                                                            serviceName: service.type,
+                                                            description: service.description,
+                                                            price: service.price.toString(),
+                                                        })
+                                                        setUpdateServiceProvidedModal(true)
+                                                    }}>
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    className="delete-btn"
+                                                    onClick={() => {
+                                                        setSelectedServiceName(service.type)
+                                                        setSelectedService(service.id)
+                                                        setDeleteServiceProvidedModal(true)
+                                                    }}>
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
+
                     </table>
                 </div>
             </div>
@@ -469,4 +488,4 @@ const CleanerViewServicesRoute: React.FC = () => {
     )
 }
 
-export default CleanerViewServicesRoute
+export default ViewServicesPage

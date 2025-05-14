@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import logo from '../../assets/logo.png';
 import LogoutModal from '../../components/LogoutModal';
 
-const CreateProfilePage: React.FC = () => {
+const CreateNewUserProfilePage: React.FC = () => {
   const sessionUser = localStorage.getItem('sessionUser') || 'defaultUser';
   const [profileName, setProfileName] = useState('')
   const [error, setError] = useState('')
@@ -21,18 +21,19 @@ const CreateProfilePage: React.FC = () => {
       },
         { withCredentials: true }
       )
-
+      setSuccess('')
+      setError('')
       if (response.data === true) {
         console.log('response.data:', response.data);
-        setSuccess('Profile created successfully!🥳')
+        setSuccess('Profile created successfully!')
         setProfileName('')
       } else {
         console.log('response.data:', response.data);
-        setError('Failed to create account. Please try again.😢')
+        setError('Failed to create account. Please try again.')
         setSuccess('')
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Something went wrong.😡')
+      setError(err.response?.data?.message || 'Something went wrong.')
       console.log({ profileName });
       setSuccess('')
     }
@@ -114,4 +115,4 @@ const CreateProfilePage: React.FC = () => {
   )
 }
 
-export default CreateProfilePage
+export default CreateNewUserProfilePage

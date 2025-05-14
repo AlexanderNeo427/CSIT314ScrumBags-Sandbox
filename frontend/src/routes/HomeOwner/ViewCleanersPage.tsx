@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import LogoutModal from '../../components/LogoutModal'
 import logo from '../../assets/logo.png'
 
-const ViewCleanerService: React.FC = () => {
+const ViewCleanersPage: React.FC = () => {
   const sessionUser = localStorage.getItem('sessionUser') || 'defaultUser'
   const [cleanerServices, setCleanerServices] = useState<any[]>([])
   const [error, setError] = useState<string>('')
@@ -12,7 +12,7 @@ const ViewCleanerService: React.FC = () => {
 
   // Popup modals
   const [showLogoutModal, setShowLogoutModal] = useState(false)
-  const [showShortlistModal, setShowShortlistModal] = useState(false)
+  const [addToShortlistModal, setAddToShortlistModal] = useState(false)
 
   // Alex: Commented out for now, to ensure build/tests pass ----
   //       Unused variables prevent the project from building ._.
@@ -30,10 +30,15 @@ const ViewCleanerService: React.FC = () => {
           serviceProvidedID: currentServiceID
         }),
       })
+      if(!response.ok){
+        alert('Service is already shortlisted')
+      } else {
+        alert('Service shortlisted')
+      }
       await response
-      setShowShortlistModal(false)
+      setAddToShortlistModal(false)
     } catch (error) {
-
+      alert("Service already shortlisted")
     }
   }
 
@@ -89,14 +94,14 @@ const ViewCleanerService: React.FC = () => {
       {/* Logout Modal */}
       <LogoutModal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} />
 
-      {showShortlistModal && (
+      {addToShortlistModal && (
         <div className='modal-overlay'>
           <div className='modal'>
             <h3>Add to shortlist?</h3>
 
             <div className="modal-buttons">
               <button onClick={() => handleShortlist()}>Yes</button>
-              <button onClick={() => setShowShortlistModal(false)}>No</button>
+              <button onClick={() => setAddToShortlistModal(false)}>No</button>
             </div>
           </div>
         </div>
@@ -166,7 +171,7 @@ const ViewCleanerService: React.FC = () => {
                           className="shortlist-btn"
                           onClick={() => {
                             setCurrentServiceID(service.serviceProvidedID)
-                            setShowShortlistModal(true)
+                            setAddToShortlistModal(true)
                           }}>
                           Shortlist
                         </button>
@@ -187,4 +192,4 @@ const ViewCleanerService: React.FC = () => {
   )
 }
 
-export default ViewCleanerService
+export default ViewCleanersPage

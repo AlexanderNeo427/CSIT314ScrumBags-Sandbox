@@ -72,7 +72,8 @@ export default class UserAccount {
             return {
                 id: retrievedUser.id,
                 username: retrievedUser.username,
-                userProfile: retrievedUser.userProfileLabel
+                userProfile: retrievedUser.userProfileLabel,
+                isSuspended: retrievedUser.isSuspended
             } as UserAccountData
         } catch (err) {
             return null
@@ -91,6 +92,11 @@ export default class UserAccount {
         password: string
     ): Promise<boolean> {
         try {
+            if (username.trim().length === 0 ||
+                password.trim().length === 0) {
+                return false
+            }
+
             const [profile] = await this.db
                 .select()
                 .from(userProfilesTable)
@@ -260,7 +266,8 @@ export default class UserAccount {
         updatedPassword: string
     ): Promise<boolean> {
         try {
-            if (updatedUsername.length === 0 || updatedPassword.length === 0) {
+            if (updatedUsername.trim().length === 0 ||
+                updatedPassword.trim().length === 0) {
                 return false
             }
 

@@ -4,7 +4,7 @@ import LogoutModal from '../../components/LogoutModal'
 import { Link } from 'react-router-dom'
 import logo from '../../assets/logo.png'
 
-const PlatformManagerViewReports: React.FC = () => {
+const ReportPage: React.FC = () => {
   const sessionUser = localStorage.getItem('sessionUser') || 'Platform Manager'
 
   const [reportData, setReportData] = useState<any[]>([])
@@ -214,4 +214,4 @@ const PlatformManagerViewReports: React.FC = () => {
   )
 }
 
-export default PlatformManagerViewReports
+export default ReportPage

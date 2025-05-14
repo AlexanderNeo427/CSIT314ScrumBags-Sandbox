@@ -12,8 +12,7 @@
         "db:push": "drizzle-kit push",
         "db:push:test": "cross-env NODE_ENV=test drizzle-kit push",
         "db:seed": "ts-node ./src/db/seeding/seed.ts",
-        "db:seed:base": "ts-node ./src/db/seeding/seedBaseAccountsOnly.ts",
-        "set_test_env": "cross-env NODE_ENV=test"
+        "db:seed:base": "ts-node ./src/db/seeding/seedBaseAccountsOnly.ts"
     },
     "author": "",
     "license": "ISC",

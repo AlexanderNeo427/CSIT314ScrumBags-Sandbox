@@ -11,6 +11,7 @@ export default defineConfig({
                 ? `.env.${process.env.NODE_ENV}`
                 : '.env'
             dotenv.config({ path: envPath, override: true })
+            console.log("THE DRIZZLE DB CONN: ", process.env.DATABASE_URL!)
             return process.env.DATABASE_URL!
         })()
     }

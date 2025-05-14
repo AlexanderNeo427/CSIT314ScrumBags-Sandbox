@@ -11,15 +11,22 @@ interface UserAccountResponse {
   isSuspended: boolean
 }
 
-const UserAdminUserAccountManagement: React.FC = () => {
+interface UserProfile {
+  id: number
+  label: string
+  isSuspended: boolean
+}
+
+const ViewUserAccountPage: React.FC = () => {
   const sessionUser = localStorage.getItem('sessionUser') || 'defaultUser'
-  const [confirmSuspendModal, setConfirmSuspendModal] = useState<{ show: boolean; user: UserAccountResponse | null }>({
+  const [suspendUserAccountModal, setSuspendUserAccountModal] = useState<{ show: boolean; user: UserAccountResponse | null }>({
     show: false,
     user: null
   })
+  const [roles, setRoles] = useState<UserProfile[]>([]); // Correct for array of strings
   const [newStatus, setNewStatus] = useState<'Active' | 'Suspended'>('Active')
   const [showLogoutModal, setShowLogoutModal] = useState(false)
-  const [showEditModal, setShowEditModal] = useState(false)
+  const [updateUserAccountModal, setUpdateUserAccountModal] = useState(false)
   const [editingUser, setEditingUser] = useState<{
     id: number | null
     username: string
@@ -55,21 +62,45 @@ const UserAdminUserAccountManagement: React.FC = () => {
   }, [])
 
   const confirmSuspendAction = async () => {
-    if (!confirmSuspendModal.user?.id) return
+    if (!suspendUserAccountModal.user?.id) return
 
     try {
       await axios.post(
         `http://localhost:3000/api/user-accounts/${newStatus === 'Active' ? 'unsuspend' : 'suspend'}`,
-        { id: confirmSuspendModal.user.id },
+        { id: suspendUserAccountModal.user.id },
         { withCredentials: true }
       )
-      setConfirmSuspendModal({ show: false, user: null })
+      setSuspendUserAccountModal({ show: false, user: null })
       await fetchUsers()
     } catch (error) {
       console.error('Failed to toggle suspension:', error)
       setError('Action failed!')
     }
   }
+
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const response = await axios.get('http://localhost:3000/api/user-profiles/', {
+          withCredentials: true,
+        });
+
+        const data = response.data; // ✅ this is already the array of roles
+        if (Array.isArray(data)) {
+          setRoles(data); // ✅ use directly
+        } else {
+          console.error('Expected array of roles but got:', data);
+          setRoles([]);
+          setError('Unexpected server response.');
+        }
+      } catch (err) {
+        console.error('Failed to fetch roles:', err);
+        setError('Could not load roles. Please try again later.');
+      }
+    };
+
+    fetchRoles();
+  }, []); 
 
   return (
     <div className="page-container">
@@ -133,7 +164,7 @@ const UserAdminUserAccountManagement: React.FC = () => {
               <tr>
                 <th>ID</th>
                 <th>Username</th>
-                <th>Role</th>
+                <th>Profile</th>
                 <th>Status</th>
                 <th id="actionCol">Actions</th>
               </tr>
@@ -159,13 +190,13 @@ const UserAdminUserAccountManagement: React.FC = () => {
                             password: '',
                             confirmPassword: ''
                           })
-                          setShowEditModal(true)
+                          setUpdateUserAccountModal(true)
                         }}
                       >Edit</button>
                       <button
                         className={user.isSuspended ? "unsuspend-btn" : "suspend-btn"}
                         onClick={() => {
-                          setConfirmSuspendModal({ show: true, user })
+                          setSuspendUserAccountModal({ show: true, user })
                           setNewStatus(user.isSuspended ? 'Active' : 'Suspended')
                         }}
                       >
@@ -179,12 +210,12 @@ const UserAdminUserAccountManagement: React.FC = () => {
           </table>
 
           {/* Suspend Modal */}
-          {confirmSuspendModal.show && confirmSuspendModal.user && (
+          {suspendUserAccountModal.show && suspendUserAccountModal.user && (
             <div className="modal-overlay">
               <div className="modal">
                 <h2>
                   Are you sure you want to {newStatus === 'Active' ? 'unsuspend' : 'suspend'} user account
-                  "<b>{confirmSuspendModal.user.username}</b>"?
+                  "<b>{suspendUserAccountModal.user.username}</b>"?
                 </h2>
 
                 <select
@@ -197,7 +228,7 @@ const UserAdminUserAccountManagement: React.FC = () => {
                 </select>
 
                 <div className="modal-buttons" style={{ marginTop: '1.5rem' }}>
-                  <button onClick={() => setConfirmSuspendModal({ show: false, user: null })}>Cancel</button>
+                  <button onClick={() => setSuspendUserAccountModal({ show: false, user: null })}>Cancel</button>
                   <button onClick={confirmSuspendAction} className="submit-btn">Update Status</button>
                 </div>
               </div>
@@ -205,17 +236,27 @@ const UserAdminUserAccountManagement: React.FC = () => {
           )}
 
           {/* Edit Modal remains unchanged */}
-          {showEditModal && (
+          {updateUserAccountModal && (
             <div className="modal-overlay">
               <div className="modal">
                 <h2>Update User Account</h2>
                 <label>Update As:</label>
-                <select value={editingUser.role} onChange={e => setEditingUser({ ...editingUser, role: e.target.value })}>
-                  <option value="">Select Role</option>
-                  <option value="cleaner">Cleaner</option>
-                  <option value="homeowner">Homeowner</option>
-                  <option value="platform manager">Platform Manager</option>
-                  <option value="user admin">User Admin</option>
+                <select
+                  value={editingUser.role}
+                  onChange={e => setEditingUser({ ...editingUser, role: e.target.value })}
+                  required
+                >
+                  <option value="" disabled>Select Role</option>
+
+                  {roles.length === 0 ? (
+                    <option disabled>Loading roles...</option>
+                  ) : (
+                    roles.map(r => (
+                      <option key={r.id} value={r.label}>
+                        {r.label.charAt(0).toUpperCase() + r.label.slice(1)}
+                      </option>
+                    ))
+                  )}
                 </select>
                 <label>Username:</label>
                 <input type="text" value={editingUser.username} onChange={e => setEditingUser({ ...editingUser, username: e.target.value })} required />
@@ -225,7 +266,7 @@ const UserAdminUserAccountManagement: React.FC = () => {
                 <input type="password" value={editingUser.confirmPassword} onChange={e => setEditingUser({ ...editingUser, confirmPassword: e.target.value })} required />
 
                 <div className="modal-buttons">
-                  <button className="cancel-btn" onClick={() => setShowEditModal(false)}>Cancel</button>
+                  <button className="cancel-btn" onClick={() => setUpdateUserAccountModal(false)}>Cancel</button>
                   <button className="submit-btn" onClick={async () => {
                     if (editingUser.password !== editingUser.confirmPassword) {
                       return alert("Passwords do not match!")
@@ -239,7 +280,7 @@ const UserAdminUserAccountManagement: React.FC = () => {
                       }, { withCredentials: true })
                       alert('User updated successfully')
                       await fetchUsers()
-                      setShowEditModal(false)
+                      setUpdateUserAccountModal(false)
                     } catch (error) {
                       console.error('Failed to update user:', error)
                       alert('Failed to update user. Please try again.')
@@ -259,4 +300,4 @@ const UserAdminUserAccountManagement: React.FC = () => {
   )
 }
 
-export default UserAdminUserAccountManagement
+export default ViewUserAccountPage

@@ -132,7 +132,7 @@ export class ShortlistedServices {
                 ))
                 .where(and(
                     eq(shortlistedServicesTable.homeownerID, homeownerID),
-                    eq(userAccountsTable.username, search),
+                    eq(servicesProvidedTable.serviceName, search),
                 ))
 
             return shortlistedCleaners.map(entry => ({

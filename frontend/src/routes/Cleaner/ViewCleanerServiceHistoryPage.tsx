@@ -11,115 +11,120 @@ interface UserAccountResponse {
 }
 
 interface History {
+  bookingId: number
   cleanerName: string | null
   typeOfService: string | null
-  price: string | null
+  homeowner: string | null
   date: Date
-  status: string
 }
 
-const HomeOwnerViewHistory: React.FC = () => {
+const ViewCleanerServiceHistoryPage: React.FC = () => {
   const sessionUser: UserAccountResponse = JSON.parse(localStorage.getItem('sessionObject') || '{}')
 
-  const [services, setServices] = useState<{ serviceName: string }[]>([])
+  // Variables
+  const [history, setHistory] = useState<History[]>([]) // Array of service history
+  const [services, setServices] = useState<{ serviceName: string }[]>([]) // Array of services available
+
+  // Filter variables
   const [serviceName, setServiceName] = useState('')
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
-
-  const [history, setHistory] = useState<History[]>([])
   const [search, setSearch] = useState('')
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return null
-    const [year, month, day] = dateString.split('-') // ["2024", "04", "27"]
-    return `${month}/${day}/${year}` // "04/27/2024" => MM/DD/YYYY ✅
-  }
-
-  // Logout Modal State
+  // Popup modals
   const [showLogoutModal, setShowLogoutModal] = useState(false)
 
-  // Fetch unique services from the backend
+  const formatDate = (dateString: string) => {
+    const [year, month, day] = dateString.split('-')
+    return `${month}/${day}/${year}` // MM/DD/YYYY
+  }
+
+  // Fetching list of services this cleaner has
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/services/')
+        const response = await axios.post(`http://localhost:3000/api/services/${sessionUser.id}`, {
+          serviceName: ''
+        })
         setServices(response.data)
-        console.log(response.data)
+        console.log(response.data) // Log services returned from the API
       } catch (error) {
-        console.error('Error fetching services:', error)
+        console.error('Error fetching cleaner services:', error)
       }
     }
     fetchServices()
-  }, [])
+  }, [sessionUser.id])
 
+  // Fetch service history for the logged-in cleaner
   const fetchServiceHist = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/homeowner/servicehistory', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          cleanerName: search,
+      // Make the request with session cookie handling
+      const response = await axios.post(
+        'http://localhost:3000/api/cleaners/serviceHistory',
+        {
+          cleanerID: sessionUser.id,
           service: serviceName,
-          fromDate: fromDate ? formatDate(fromDate) : null,
-          toDate: toDate ? formatDate(toDate) : null,
-        }),
-      })
+          homeownerName: search,
+          startDate: fromDate ? formatDate(fromDate) : null,
+          endDate: toDate ? formatDate(toDate) : null,
+        },
+        {
+          withCredentials: true, // Ensure session cookies are included with the request
+        }
+      )
 
-      if (!response.ok) {
+      // Log the response to see its structure
+      console.log('Service History Response:', response.data)
+
+      // Assuming the array is inside the 'data' property of the response
+      if (Array.isArray(response.data)) {
+        const formatted: History[] = response.data.map((item: any) => ({
+          bookingId: item.bookingid,
+          cleanerName: item.cleanerName,
+          typeOfService: item.serviceName,
+          homeowner: item.homeOwnerName,
+          date: item.date
+        }))
+
+        setHistory(formatted) // Update the history state
+      } else {
         setHistory([])
-        throw new Error('Failed to fetch service history')
+        console.error('Failed to fetch service history: response data is not an array')
       }
-
-      const serviceHistoryData = await response.json()
-      const formatted: History[] = serviceHistoryData.map((item: any) => ({
-        cleanerName: item.cleanerName,
-        typeOfService: item.serviceName,
-        price: item.price,
-        date: item.date,
-        status: item.status,
-      }))
-
-      setHistory(formatted)
     } catch (error) {
-      console.error('Error fetching services:', error)
+      console.error('Error fetching service history:', error)
     }
   }
 
-
-  // Fetch service history on page load
   useEffect(() => {
     fetchServiceHist()
-  }, [])
+  }, [sessionUser.id])
 
   return (
     <div className="page-container">
       <div className="header-container">
         <div>
           <img src={logo} alt="Logo" height={40} />
-          <h2><Link to="/homeowner-dashboard">Home</Link></h2>
-          <h2><Link to="/ViewCleanerService">View All Cleaners</Link></h2>
-          <h2><Link to="/ViewServiceHistory">My History</Link></h2>
-          <h2><Link to="/ViewShortlist">My Shortlist</Link></h2>
+          <h2><Link to="/cleaner-dashboard">Home</Link></h2>
+          <h2><Link to="/cleaner-view-services">My Services</Link></h2>
+          <h2><Link to="/cleaner-view-bookings">My Bookings</Link></h2>
         </div>
 
         <div>
-          <h2 id="logout_button" onClick={() => setShowLogoutModal(true)} style={{ cursor: 'pointer' }}>
+          <h2 id="logout-button" onClick={() => setShowLogoutModal(true)} style={{ cursor: 'pointer' }}>
             <span style={{ marginRight: '8px' }}>👤</span>{sessionUser.username}/Logout
           </h2>
         </div>
+
       </div>
 
-
-      {/* Logout Modal */}
       <LogoutModal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} />
 
       <div className="body-container">
         <div className="card">
-          <h1>View History</h1>
+          <h1>My Bookings</h1>
 
+          {/* Top Bar Filters */}
           <div className="top-bar2">
             <select
               value={serviceName}
@@ -154,30 +159,31 @@ const HomeOwnerViewHistory: React.FC = () => {
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
-            <button onClick={fetchServiceHist}>Search</button>
+            <button onClick={() => fetchServiceHist()}>Search</button>
           </div>
 
+          {/* Table */}
           <table>
             <thead>
               <tr>
-                <th><b>Cleaner Name</b></th>
-                <th><b>Type of Service</b></th>
-                <th><b>Price</b></th>
+                <th><b>ID</b></th>
+                <th><b>Services</b></th>
                 <th><b>Date</b></th>
+                <th><b>Homeowner Name</b></th>
               </tr>
             </thead>
             <tbody>
               {history.length === 0 ? (
                 <tr>
-                  <td colSpan={4}>No history found for the selected filters.</td>
+                  <td>No history found for the selected filters.</td>
                 </tr>
               ) : (
                 history.map((service, index) => (
                   <tr key={index}>
-                    <td>{service.cleanerName}</td>
+                    <td>{index + 1}</td>
                     <td>{service.typeOfService}</td>
-                    <td>${service.price}</td>
                     <td>{new Date(service.date).toLocaleDateString('en-GB')}</td>
+                    <td>{service.homeowner}</td>
                   </tr>
                 ))
               )}
@@ -193,4 +199,4 @@ const HomeOwnerViewHistory: React.FC = () => {
   )
 }
 
-export default HomeOwnerViewHistory
+export default ViewCleanerServiceHistoryPage

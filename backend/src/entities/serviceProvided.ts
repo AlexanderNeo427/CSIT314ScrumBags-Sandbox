@@ -70,7 +70,7 @@ export class ServiceProvided {
      * 
      * Gets all the service 'types' provided by a cleaner (by their userID)
      */
-    public async viewServicesProvided(userID: number): Promise<ServiceProvidedData[]> {
+    public async viewServicesProvided(cleanerID: number): Promise<ServiceProvidedData[]> {
         try {
             const servicesProvidedByCleaner = await this.db
                 .select({
@@ -84,7 +84,7 @@ export class ServiceProvided {
                     servicesProvidedTable.cleanerID,
                     userAccountsTable.id
                 ))
-                .where(eq(userAccountsTable.id, userID))
+                .where(eq(userAccountsTable.id, cleanerID))
 
             return servicesProvidedByCleaner.map(sp => {
                 return {

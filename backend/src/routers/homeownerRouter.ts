@@ -139,28 +139,4 @@ homeownerRouter.get(
     }
 )
 
-/**
- * US-443: As a homeowner, I want to book for cleaners so that cleaners can clean my home
- */
-homeownerRouter.post(
-    '/createbooking',
-    requireAuthMiddleware,
-    async (req, res): Promise<void> => {
-
-        const homeownerID = req.session.user?.id as number
-        const { serviceProvidedID, startTimestamp } = req.body
-        const startDate = new Date(startTimestamp)
-
-        const createSuccess =
-            await new CreateServiceBookingController()
-                .createServiceBooking(homeownerID, serviceProvidedID, startDate)
-
-        if (createSuccess) {
-            res.status(StatusCodes.OK).json(true)
-        } else {
-            res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(false)
-        }
-    }
-)
-
 export default homeownerRouter
